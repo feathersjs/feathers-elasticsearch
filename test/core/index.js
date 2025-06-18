@@ -1,5 +1,3 @@
-'use strict';
-
 const find = require('./find');
 const get = require('./get');
 const create = require('./create');
@@ -15,5 +13,5 @@ module.exports = {
   patch,
   remove,
   update,
-  raw
+  raw,
 };

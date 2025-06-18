@@ -1,9 +1,10 @@
+/* eslint-disable no-unused-expressions */
 const { expect } = require('chai');
 const errors = require('@feathersjs/errors');
 
 const { parseQuery } = require('../../lib/utils');
 
-module.exports = function parseQueryTests () {
+module.exports = function parseQueryTests() {
   describe('parseQuery', () => {
     it('should return null if query is null or undefined', () => {
       expect(parseQuery(null, '_id')).to.be.null;
@@ -65,10 +66,18 @@ module.exports = function parseQueryTests () {
     });
 
     it('should throw BadRequest if $sqs has non-string $operator property', () => {
-      expect(() => parseQuery({ $sqs: { $fields: [], $query: '', $operator: [] } })).to.throw(errors.BadRequest);
-      expect(() => parseQuery({ $sqs: { $fields: [], $query: '', $operator: 123 } })).to.throw(errors.BadRequest);
-      expect(() => parseQuery({ $sqs: { $fields: [], $query: '', $operator: true } })).to.throw(errors.BadRequest);
-      expect(() => parseQuery({ $sqs: { $fields: [], $query: '', $operator: {} } })).to.throw(errors.BadRequest);
+      expect(() => parseQuery({ $sqs: { $fields: [], $query: '', $operator: [] } })).to.throw(
+        errors.BadRequest,
+      );
+      expect(() => parseQuery({ $sqs: { $fields: [], $query: '', $operator: 123 } })).to.throw(
+        errors.BadRequest,
+      );
+      expect(() => parseQuery({ $sqs: { $fields: [], $query: '', $operator: true } })).to.throw(
+        errors.BadRequest,
+      );
+      expect(() => parseQuery({ $sqs: { $fields: [], $query: '', $operator: {} } })).to.throw(
+        errors.BadRequest,
+      );
     });
 
     it('should throw BadRequest if $child is not an object, null or undefined', () => {
@@ -136,10 +145,11 @@ module.exports = function parseQueryTests () {
     it('should throw BadRequest if criteria is not a valid primitive, array or an object', () => {
       expect(() => parseQuery({ age: null }, '_id')).to.throw(errors.BadRequest);
       expect(() => parseQuery({ age: NaN }, '_id')).to.throw(errors.BadRequest);
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       expect(() => parseQuery({ age: () => {} }, '_id')).to.throw(errors.BadRequest);
     });
 
-    ['$exists', '$missing'].forEach(query => {
+    ['$exists', '$missing'].forEach((query) => {
       it(`should throw BadRequest if ${query} values are not arrays with (string)field property`, () => {
         expect(() => parseQuery({ [query]: 'foo' }, '_id')).to.throw(errors.BadRequest);
         expect(() => parseQuery({ [query]: [1234] }, '_id')).to.throw(errors.BadRequest);
@@ -152,101 +162,80 @@ module.exports = function parseQueryTests () {
       const query = {
         user: 'doug',
         age: 23,
-        active: true
+        active: true,
       };
       const expectedResult = {
-        filter: [
-          { term: { user: 'doug' } },
-          { term: { age: 23 } },
-          { term: { active: true } }
-        ]
+        filter: [{ term: { user: 'doug' } }, { term: { age: 23 } }, { term: { active: true } }],
       };
 
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return term query for each value from an array', () => {
       const query = {
         tags: ['javascript', 'nodejs'],
-        user: 'doug'
+        user: 'doug',
       };
       const expectedResult = {
         filter: [
           { term: { tags: 'javascript' } },
           { term: { tags: 'nodejs' } },
-          { term: { user: 'doug' } }
-        ]
+          { term: { user: 'doug' } },
+        ],
       };
 
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should convert provided id property name to _id', () => {
       const query = { id: 12 };
       const expectedResult = {
-        filter: [
-          { term: { _id: 12 } }
-        ]
+        filter: [{ term: { _id: 12 } }],
       };
-      expect(parseQuery(query, 'id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, 'id')).to.deep.equal(expectedResult);
     });
 
     it('should return terms query for each $in param', () => {
       const query = {
         user: { $in: ['doug', 'bob'] },
-        age: { $in: [23, 24, 50] }
+        age: { $in: [23, 24, 50] },
       };
       const expectedResult = {
-        filter: [
-          { terms: { user: ['doug', 'bob'] } },
-          { terms: { age: [23, 24, 50] } }
-        ]
+        filter: [{ terms: { user: ['doug', 'bob'] } }, { terms: { age: [23, 24, 50] } }],
       };
 
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return term and terms query together', () => {
       const query = {
         user: 'doug',
-        age: { $in: [23, 24] }
+        age: { $in: [23, 24] },
       };
       const expectedResult = {
-        filter: [
-          { term: { user: 'doug' } },
-          { terms: { age: [23, 24] } }
-        ]
+        filter: [{ term: { user: 'doug' } }, { terms: { age: [23, 24] } }],
       };
 
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return must_not terms query for each $nin param', () => {
       const query = {
         user: { $nin: ['doug', 'bob'] },
-        age: { $nin: [23, 24, 50] }
+        age: { $nin: [23, 24, 50] },
       };
       const expectedResult = {
-        must_not: [
-          { terms: { user: ['doug', 'bob'] } },
-          { terms: { age: [23, 24, 50] } }
-        ]
+        must_not: [{ terms: { user: ['doug', 'bob'] } }, { terms: { age: [23, 24, 50] } }],
       };
 
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return range query for $lt, $lte, $gt, $gte', () => {
       const query = {
         age: { $gt: 30, $lt: 40 },
         likes: { $lte: 100 },
-        cars: { $gte: 2, $lt: 5 }
+        cars: { $gte: 2, $lt: 5 },
       };
       const expectedResult = {
         filter: [
@@ -254,42 +243,32 @@ module.exports = function parseQueryTests () {
           { range: { age: { lt: 40 } } },
           { range: { likes: { lte: 100 } } },
           { range: { cars: { gte: 2 } } },
-          { range: { cars: { lt: 5 } } }
-        ]
+          { range: { cars: { lt: 5 } } },
+        ],
       };
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "should" subquery for $or', () => {
       const query = {
-        $or: [
-          { user: 'Adam', age: { $gt: 40 } },
-          { age: { $gt: 40 } }
-        ]
+        $or: [{ user: 'Adam', age: { $gt: 40 } }, { age: { $gt: 40 } }],
       };
       const expectedResult = {
         should: [
           {
             bool: {
-              filter: [
-                { term: { user: 'Adam' } },
-                { range: { age: { gt: 40 } } }
-              ]
-            }
+              filter: [{ term: { user: 'Adam' } }, { range: { age: { gt: 40 } } }],
+            },
           },
           {
             bool: {
-              filter: [
-                { range: { age: { gt: 40 } } }
-              ]
-            }
-          }
+              filter: [{ range: { age: { gt: 40 } } }],
+            },
+          },
         ],
-        minimum_should_match: 1
+        minimum_should_match: 1,
       };
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return all queries for $and', () => {
@@ -298,189 +277,151 @@ module.exports = function parseQueryTests () {
           { tags: 'javascript' },
           { tags: { $ne: 'legend' } },
           { age: { $nin: [23, 24] } },
-          { age: { $in: [25, 26] } }
+          { age: { $in: [25, 26] } },
         ],
-        name: 'Doug'
+        name: 'Doug',
       };
       const expectedResult = {
         filter: [
           { term: { tags: 'javascript' } },
           { terms: { age: [25, 26] } },
-          { term: { name: 'Doug' } }
+          { term: { name: 'Doug' } },
         ],
-        must_not: [
-          { term: { tags: 'legend' } },
-          { terms: { age: [23, 24] } }
-        ]
+        must_not: [{ term: { tags: 'legend' } }, { terms: { age: [23, 24] } }],
       };
 
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "simple_query_string" for $sqs with default_operator "or" by default', () => {
       const query = {
         $sqs: {
-          $fields: [
-            'description',
-            'title^5'
-          ],
-          $query: '-(track another)'
-        }
+          $fields: ['description', 'title^5'],
+          $query: '-(track another)',
+        },
       };
       const expectedResult = {
         must: [
           {
             simple_query_string: {
-              fields: [
-                'description',
-                'title^5'
-              ],
+              fields: ['description', 'title^5'],
               query: '-(track another)',
-              default_operator: 'or'
-            }
-          }
-        ]
+              default_operator: 'or',
+            },
+          },
+        ],
       };
 
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "simple_query_string" for $sqs with specified default_operator', () => {
       const query = {
         $sqs: {
-          $fields: [
-            'description'
-          ],
+          $fields: ['description'],
           $query: '-(track another)',
-          $operator: 'and'
-        }
+          $operator: 'and',
+        },
       };
       const expectedResult = {
         must: [
           {
             simple_query_string: {
-              fields: [
-                'description'
-              ],
+              fields: ['description'],
               query: '-(track another)',
-              default_operator: 'and'
-            }
-          }
-        ]
+              default_operator: 'and',
+            },
+          },
+        ],
       };
 
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "prefix" query for $prefix', () => {
       const query = {
-        user: { $prefix: 'ada' }
+        user: { $prefix: 'ada' },
       };
       const expectedResult = {
-        filter: [
-          { prefix: { user: 'ada' } }
-        ]
+        filter: [{ prefix: { user: 'ada' } }],
       };
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "wildcard" query for $wildcard', () => {
       const query = {
-        user: { $wildcard: 'ada' }
+        user: { $wildcard: 'ada' },
       };
       const expectedResult = {
-        filter: [
-          { wildcard: { user: 'ada' } }
-        ]
+        filter: [{ wildcard: { user: 'ada' } }],
       };
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "regexp" query for $regexp', () => {
       const query = {
-        user: { $regexp: 'ada' }
+        user: { $regexp: 'ada' },
       };
       const expectedResult = {
-        filter: [
-          { regexp: { user: 'ada' } }
-        ]
+        filter: [{ regexp: { user: 'ada' } }],
       };
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "match_all" query for $all: true', () => {
       const query = {
-        $all: true
+        $all: true,
       };
       const expectedResult = {
-        must: [
-          { match_all: {} }
-        ]
+        must: [{ match_all: {} }],
       };
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should not return "match_all" query for $all: false', () => {
       const query = {
-        $all: false
+        $all: false,
       };
       const expectedResult = null;
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "match" query for $match', () => {
       const query = {
-        text: { $match: 'javascript' }
+        text: { $match: 'javascript' },
       };
       const expectedResult = {
-        must: [
-          { match: { text: 'javascript' } }
-        ]
+        must: [{ match: { text: 'javascript' } }],
       };
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "match_phrase" query for $phrase', () => {
       const query = {
-        text: { $phrase: 'javascript' }
+        text: { $phrase: 'javascript' },
       };
       const expectedResult = {
-        must: [
-          { match_phrase: { text: 'javascript' } }
-        ]
+        must: [{ match_phrase: { text: 'javascript' } }],
       };
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "match_phrase_prefix" query for $phrase_prefix', () => {
       const query = {
-        text: { $phrase_prefix: 'javasc' }
+        text: { $phrase_prefix: 'javasc' },
       };
       const expectedResult = {
-        must: [
-          { match_phrase_prefix: { text: 'javasc' } }
-        ]
+        must: [{ match_phrase_prefix: { text: 'javasc' } }],
       };
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "has_child" query for $child', () => {
       const query = {
         $child: {
           $type: 'address',
-          city: 'Ashford'
-        }
+          city: 'Ashford',
+        },
       };
       const expectedResult = {
         must: [
@@ -489,25 +430,22 @@ module.exports = function parseQueryTests () {
               type: 'address',
               query: {
                 bool: {
-                  filter: [
-                    { term: { city: 'Ashford' } }
-                  ]
-                }
-              }
-            }
-          }
-        ]
+                  filter: [{ term: { city: 'Ashford' } }],
+                },
+              },
+            },
+          },
+        ],
       };
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "has_parent" query for $parent', () => {
       const query = {
         $parent: {
           $type: 'people',
-          name: 'Douglas'
-        }
+          name: 'Douglas',
+        },
       };
       const expectedResult = {
         must: [
@@ -516,25 +454,22 @@ module.exports = function parseQueryTests () {
               parent_type: 'people',
               query: {
                 bool: {
-                  filter: [
-                    { term: { name: 'Douglas' } }
-                  ]
-                }
-              }
-            }
-          }
-        ]
+                  filter: [{ term: { name: 'Douglas' } }],
+                },
+              },
+            },
+          },
+        ],
       };
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
     it('should return "nested" query for $nested', () => {
       const query = {
         $nested: {
-          $path: 'legend',
-          'legend.name': 'Douglas'
-        }
+          '$path': 'legend',
+          'legend.name': 'Douglas',
+        },
       };
       const expectedResult = {
         must: [
@@ -543,36 +478,35 @@ module.exports = function parseQueryTests () {
               path: 'legend',
               query: {
                 bool: {
-                  filter: [
-                    { term: { 'legend.name': 'Douglas' } }
-                  ]
-                }
-              }
-            }
-          }
-        ]
+                  filter: [{ term: { 'legend.name': 'Douglas' } }],
+                },
+              },
+            },
+          },
+        ],
       };
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
 
-    [['$exists', 'must'], ['$missing', 'must_not']].forEach(([q, clause]) => {
+    [
+      ['$exists', 'must'],
+      ['$missing', 'must_not'],
+    ].forEach(([q, clause]) => {
       it(`should return "${clause}" query for ${q}`, () => {
         const query = {
-          [q]: ['phone', 'address']
+          [q]: ['phone', 'address'],
         };
         const expectedResult = {
           [clause]: [
             {
-              exists: { field: 'phone' }
+              exists: { field: 'phone' },
             },
             {
-              exists: { field: 'address' }
-            }
-          ]
+              exists: { field: 'address' },
+            },
+          ],
         };
-        expect(parseQuery(query, '_id')).to
-          .deep.equal(expectedResult);
+        expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
       });
     });
 
@@ -582,7 +516,7 @@ module.exports = function parseQueryTests () {
           { likes: { $gt: 9, $lt: 12 }, age: { $ne: 10 } },
           { user: { $nin: ['Anakin', 'Luke'] } },
           { user: { $prefix: 'ada' } },
-          { $all: true }
+          { $all: true },
         ],
         age: { $in: [12, 13] },
         user: 'Obi Wan',
@@ -590,60 +524,43 @@ module.exports = function parseQueryTests () {
         bio: { $match: 'javascript', $phrase: 'the good parts' },
         $child: { $type: 'address', city: 'Ashford' },
         $parent: { $type: 'people', name: 'Douglas' },
-        $nested: { $path: 'legend', 'legend.name': { $match: 'Douglas' } },
-        $and: [
-          { tags: 'javascript' },
-          { tags: 'legend' }
-        ],
+        $nested: { '$path': 'legend', 'legend.name': { $match: 'Douglas' } },
+        $and: [{ tags: 'javascript' }, { tags: 'legend' }],
         $exists: ['phone'],
-        $missing: ['address']
+        $missing: ['address'],
       };
       const expectedResult = {
         should: [
           {
             bool: {
-              filter: [
-                { range: { likes: { gt: 9 } } },
-                { range: { likes: { lt: 12 } } }
-              ],
-              must_not: [
-                { term: { age: 10 } }
-              ]
-            }
+              filter: [{ range: { likes: { gt: 9 } } }, { range: { likes: { lt: 12 } } }],
+              must_not: [{ term: { age: 10 } }],
+            },
           },
           {
             bool: {
-              must_not: [
-                { terms: { user: ['Anakin', 'Luke'] } }
-              ]
-            }
+              must_not: [{ terms: { user: ['Anakin', 'Luke'] } }],
+            },
           },
           {
             bool: {
-              filter: [
-                { prefix: { user: 'ada' } }
-              ]
-            }
+              filter: [{ prefix: { user: 'ada' } }],
+            },
           },
           {
             bool: {
-              must: [
-                { match_all: {} }
-              ]
-            }
-          }
+              must: [{ match_all: {} }],
+            },
+          },
         ],
         minimum_should_match: 1,
         filter: [
           { terms: { age: [12, 13] } },
           { term: { user: 'Obi Wan' } },
           { term: { tags: 'javascript' } },
-          { term: { tags: 'legend' } }
+          { term: { tags: 'legend' } },
         ],
-        must_not: [
-          { terms: { country: ['us', 'pl', 'ae'] } },
-          { exists: { field: 'address' } }
-        ],
+        must_not: [{ terms: { country: ['us', 'pl', 'ae'] } }, { exists: { field: 'address' } }],
         must: [
           { match: { bio: 'javascript' } },
           { match_phrase: { bio: 'the good parts' } },
@@ -652,43 +569,37 @@ module.exports = function parseQueryTests () {
               type: 'address',
               query: {
                 bool: {
-                  filter: [
-                    { term: { city: 'Ashford' } }
-                  ]
-                }
-              }
-            }
+                  filter: [{ term: { city: 'Ashford' } }],
+                },
+              },
+            },
           },
           {
             has_parent: {
               parent_type: 'people',
               query: {
                 bool: {
-                  filter: [
-                    { term: { name: 'Douglas' } }
-                  ]
-                }
-              }
-            }
+                  filter: [{ term: { name: 'Douglas' } }],
+                },
+              },
+            },
           },
           {
             nested: {
               path: 'legend',
               query: {
                 bool: {
-                  must: [
-                    { match: { 'legend.name': 'Douglas' } }
-                  ]
-                }
-              }
-            }
+                  must: [{ match: { 'legend.name': 'Douglas' } }],
+                },
+              },
+            },
           },
-          { exists: { field: 'phone' } }
-        ]
+          { exists: { field: 'phone' } },
+        ],
       };
 
-      expect(parseQuery(query, '_id')).to
-        .deep.equal(expectedResult);
+      expect(parseQuery(query, '_id')).to.deep.equal(expectedResult);
     });
   });
 };
+/* eslint-enable no-unused-expressions */

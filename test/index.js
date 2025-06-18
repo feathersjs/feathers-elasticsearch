@@ -3,10 +3,12 @@ const adapterTests = require('@feathersjs/adapter-tests');
 
 const feathers = require('@feathersjs/feathers');
 const errors = require('@feathersjs/errors');
+const { before, after } = require('mocha');
 const service = require('../lib');
 const db = require('../test-utils/test-db');
 const coreTests = require('./core');
 const { getCompatProp } = require('../lib/utils/core');
+
 const testSuite = adapterTests([
   '.options',
   '.events',
@@ -70,7 +72,7 @@ const testSuite = adapterTests([
   '.find + paginate + params',
   '.remove + id + query id',
   '.update + id + query id',
-  '.patch + id + query id'
+  '.patch + id + query id',
 ]);
 
 describe('Elasticsearch Service', () => {
@@ -79,41 +81,47 @@ describe('Elasticsearch Service', () => {
   const esVersion = db.getApiVersion();
 
   before(() => {
-    return db.resetSchema()
-      .then(() => {
-        app.use(`/${serviceName}`, service({
+    return db.resetSchema().then(() => {
+      app.use(
+        `/${serviceName}`,
+        service({
           Model: db.getClient(),
           events: ['testing'],
           id: 'id',
           esVersion,
-          elasticsearch: db.getServiceConfig(serviceName)
-        }));
-        app.use('/aka', service({
+          elasticsearch: db.getServiceConfig(serviceName),
+        }),
+      );
+      app.use(
+        '/aka',
+        service({
           Model: db.getClient(),
           id: 'id',
           parent: 'parent',
           esVersion,
           elasticsearch: db.getServiceConfig('aka'),
-          join: getCompatProp({ '6.0': 'aka' }, esVersion)
-        }));
-      });
+          join: getCompatProp({ '6.0': 'aka' }, esVersion),
+        }),
+      );
+    });
   });
 
   after(() => db.deleteSchema());
 
   it('is CommonJS compatible', () => {
+    // eslint-disable-next-line global-require
     expect(typeof require('../lib')).to.equal('function');
   });
 
   describe('Initialization', () => {
     it('throws an error when missing options', () => {
-      expect(service.bind(null)).to
-        .throw('Elasticsearch options have to be provided');
+      expect(service.bind(null)).to.throw('Elasticsearch options have to be provided');
     });
 
     it('throws an error when missing `options.Model`', () => {
-      expect(service.bind(null, {})).to
-        .throw('Elasticsearch `Model` (client) needs to be provided');
+      expect(service.bind(null, {})).to.throw(
+        'Elasticsearch `Model` (client) needs to be provided',
+      );
     });
   });
 
@@ -121,28 +129,28 @@ describe('Elasticsearch Service', () => {
 
   describe('Specific Elasticsearch tests', () => {
     before(async () => {
-      const service = app.service(serviceName);
+      const serviceInstance = app.service(serviceName);
 
-      service.options.multi = true;
+      serviceInstance.options.multi = true;
       app.service('aka').options.multi = true;
 
-      await service.remove(null, { query: { $limit: 1000 } });
-      await service.create([
+      await serviceInstance.remove(null, { query: { $limit: 1000 } });
+      await serviceInstance.create([
         {
           id: 'bob',
           name: 'Bob',
           bio: 'I like JavaScript.',
           tags: ['javascript', 'programmer'],
           addresses: [{ street: '1 The Road' }, { street: 'Programmer Lane' }],
-          aka: 'real'
+          aka: 'real',
         },
         {
           id: 'moody',
           name: 'Moody',
-          bio: 'I don\'t like .NET.',
+          bio: "I don't like .NET.",
           tags: ['programmer'],
           addresses: [{ street: '2 The Road' }, { street: 'Developer Lane' }],
-          aka: 'real'
+          aka: 'real',
         },
         {
           id: 'douglas',
@@ -151,14 +159,14 @@ describe('Elasticsearch Service', () => {
           tags: ['javascript', 'legend', 'programmer'],
           addresses: [{ street: '3 The Road' }, { street: 'Coder Alley' }],
           phone: '0123455567',
-          aka: 'real'
-        }
+          aka: 'real',
+        },
       ]);
 
       await app.service('aka').create([
         { name: 'The Master', parent: 'douglas', id: 'douglasAka', aka: 'alias' },
         { name: 'Teacher', parent: 'douglas', aka: 'alias' },
-        { name: 'Teacher', parent: 'moody', aka: 'alias' }
+        { name: 'Teacher', parent: 'moody', aka: 'alias' },
       ]);
     });
 

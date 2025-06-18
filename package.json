@@ -1,65 +1,167 @@
 {
-  "name": "feathers-elasticsearch",
-  "description": "Elasticsearch adapter for FeathersJs",
-  "version": "3.1.0",
-  "homepage": "https://github.com/feathersjs-ecosystem/feathers-elasticsearch",
+  "name": "@refrens/feathers-esx",
+  "version": "1.0.0",
+  "description": "Refrens fork of feathers-elasticsearch with fixes and extensions",
   "main": "lib/",
   "types": "types",
   "keywords": [
     "feathers",
-    "feathers-plugin"
+    "elasticsearch",
+    "refrens"
   ],
-  "license": "MIT",
+  "homepage": "https://github.com/refrens/feathers-esx",
   "repository": {
     "type": "git",
-    "url": "git://github.com/feathersjs-ecosystem/feathers-elasticsearch.git"
+    "url": "git+ssh://git@github.com/refrens/feathers-esx.git"
   },
-  "author": {
-    "name": "Feathers contributors",
-    "email": "hello@feathersjs.com",
-    "url": "https://feathersjs.com"
-  },
-  "contributors": [],
+  "author": "Refrens Tech",
+  "contributors": [
+    {
+      "name": "Pranshu Mishra",
+      "url": "https://github.com/Percy-Mack"
+    }
+  ],
+  "license": "UNLICENCED",
   "bugs": {
-    "url": "https://github.com/feathersjs-ecosystem/feathers-elasticsearch/issues"
-  },
-  "engines": {
-    "node": ">= 6"
-  },
-  "scripts": {
-    "publish": "git push origin --tags && npm run changelog && git push origin",
-    "release:patch": "npm version patch && npm publish",
-    "release:minor": "npm version minor && npm publish",
-    "release:major": "npm version major && npm publish",
-    "changelog": "github_changelog_generator && git add CHANGELOG.md && git commit -am \"Updating changelog\"",
-    "lint": "eslint --fix .",
-    "dtslint": "dtslint types",
-    "mocha": "mocha --opts mocha.opts",
-    "coverage": "nyc npm run mocha",
-    "test": "npm run lint && npm run dtslint && npm run coverage"
+    "url": "https://github.com/refrens/feathers-esx/issues"
   },
   "directories": {
-    "lib": "lib"
+    "lib": "lib",
+    "test": "test/"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "scripts": {
+    "typecheck": "tsc --project types/tsconfig.json --noEmit",
+    "commit": "git-cz",
+    "build": "tsc --build types/tsconfig.json",
+    "build:incr": "tsc --build types/tsconfig.json --incremental",
+    "build:yalc": "yalc publish --no-scripts --push --changed",
+    "watch:onsuccess": "run-s build:incr build:yalc",
+    "watch": "tsc-watch --project types/tsconfig.json --onSuccess \"npm run watch:onsuccess\"",
+    "feathers": "feathers",
+    "lint": "run-s lint:js lint:prettier:check",
+    "lint:fix": "run-s lint:js:fix lint:prettier:fix",
+    "lint:js": "run-s lint:js:prettier lint:js:eslint",
+    "lint:file": "eslint --fix",
+    "lint:js:eslint": "eslint '**/*.{js,ts,tsx,mjs}'",
+    "lint:js:fix": "run-s lint:js:fix:prettier lint:js:fix:eslint",
+    "lint:js:fix:eslint": "eslint '**/*.{js,ts,tsx,mjs}' --fix",
+    "lint:js:prettier": "prettier --check '**/*.{json,js,ts,tsx,mjs}'",
+    "lint:js:fix:prettier": "prettier --write '**/*.{json,js,ts,tsx,mjs}'",
+    "lint:prettier:check": "prettier --check '**/*.{css,html,js,json,jsx,md,sass,scss,ts,tsx,vue,yaml,yml}'",
+    "lint:prettier:fix": "prettier --write '**/*.{css,html,js,json,jsx,md,sass,scss,ts,tsx,vue,yaml,yml}'",
+    "test": "mocha --opts mocha.opts",
+    "test:coverage": "nyc npm run test",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
+    "changelog:reset": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
+    "prerelease": "run-s lint build",
+    "release-it": "release-it",
+    "release": "run-s \"release-it -- --ci --git.requireBranch=master {1}\" --",
+    "release:canary": "run-s \"release-it -- {2} --preRelease={1} --ci\" -- "
   },
   "dependencies": {
     "@feathersjs/adapter-commons": "^4.3.6",
     "@feathersjs/commons": "^4.3.0",
     "@feathersjs/errors": "^4.3.4",
-    "debug": "^4.1.1"
+    "debug": "^4.1.1",
+    "@elastic/elasticsearch": "^8.4.0"
+  },
+  "peerDependencies": {
+    "@elastic/elasticsearch": "^8.4.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^11.0.0",
+    "@commitlint/config-conventional": "^11.0.0",
+    "@refrens/eslint-config": "^1.1.2",
+    "@release-it/conventional-changelog": "^2.0.0",
+    "@types/chai": "^5.2.2",
+    "@types/debug": "^4.1.7",
+    "@types/eslint": "^8.4.6",
+    "@types/eslint-plugin-prettier": "^3.1.0",
+    "@types/lint-staged": "^13.2.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.19.0",
+    "@types/prettier": "^2.7.0",
+    "@types/sinon": "^17.0.4",
+    "@types/tsc-watch": "^4.2.0",
+    "@typescript-eslint/eslint-plugin": "^5.36.2",
+    "@typescript-eslint/parser": "^5.36.2",
+    "commitiquette": "^1.0.9",
+    "commitizen": "^3.1.2",
+    "conventional-changelog-cli": "^2.1.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^7.22.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-eslint-comments": "^3.2.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jest": "^24.1.3",
+    "eslint-plugin-jest-formatting": "^1.2.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "eslint-plugin-progress": "taskworld/eslint-plugin-progress",
+    "eslint-plugin-promise": "^4.2.1",
+    "husky": "^4.3.8",
+    "lint-staged": "^10.5.3",
+    "npm-run-all": "^4.1.5",
+    "post-merge-install": "^0.4.0",
+    "prettier": "^2.2.1",
+    "release-it": "^14.2.2",
+    "ts-node": "^10.9.2",
+    "tsc-watch": "^5.0.3",
+    "tslib": "^2.4.0",
+    "typescript": "^4.8.3",
     "@feathersjs/adapter-tests": "^4.3.4",
     "@feathersjs/express": "^4.3.5",
     "@feathersjs/feathers": "^4.3.4",
     "@feathersjs/socketio": "^4.3.5",
     "@types/elasticsearch": "^5.0.35",
     "chai": "^4.2.0",
-    "dtslint": "^0.9.8",
     "elasticsearch": "^16.4.0",
-    "eslint": "^6.5.1",
     "mocha": "^6.2.1",
     "nyc": "^14.1.1",
     "semistandard": "^14.2.0",
     "sinon": "^7.5.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "commitiquette"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "post-merge": "post-merge-install",
+      "post-rebase": "post-merge-install",
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
+  "release-it": {
+    "git": {
+      "commitMessage": "chore(release): v${version}",
+      "requireBranch": false
+    },
+    "github": {
+      "release": true
+    },
+    "npm": {
+      "timeout": 10000,
+      "skipChecks": true
+    },
+    "hooks": {
+      "after:release": "git checkout -b v${version}-release && git push -u"
+    },
+    "plugins": {
+      "@release-it/conventional-changelog": {
+        "preset": "angular",
+        "infile": "CHANGELOG.md"
+      }
+    }
   }
 }

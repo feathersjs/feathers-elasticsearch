@@ -10,25 +10,25 @@ const schema = [
             addresses: {
               type: 'nested',
               properties: {
-                street: { type: 'keyword' }
-              }
+                street: { type: 'keyword' },
+              },
             },
-            phone: { type: 'keyword' }
-          }
+            phone: { type: 'keyword' },
+          },
         },
         aka: {
           _parent: {
-            type: 'people'
-          }
+            type: 'people',
+          },
         },
         todos: {
           properties: {
-            text: { type: 'keyword' }
-          }
-        }
-      }
-    }
-  }
+            text: { type: 'keyword' },
+          },
+        },
+      },
+    },
+  },
 ];
 
 module.exports = schema;

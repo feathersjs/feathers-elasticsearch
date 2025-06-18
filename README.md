@@ -1,19 +1,14 @@
-# feathers-elasticsearch
+# @refrens/feathers-esx
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/feathersjs-ecosystem/feathers-elasticsearch.svg)](https://greenkeeper.io/)
+![npm version](https://img.shields.io/badge/@refrens/feathers--esx-v1.0.0-blue?style=flat-square)
 
-[![Build Status](https://travis-ci.org/feathersjs-ecosystem/feathers-elasticsearch.svg?branch=master)](https://travis-ci.org/feathersjs-ecosystem/feathers-elasticsearch)
-[![Dependency Status](https://david-dm.org/feathersjs-ecosystem/feathers-elasticsearch/status.svg)](https://david-dm.org/feathersjs-ecosystem/feathers-elasticsearch)
-[![Download Status](https://img.shields.io/npm/dm/feathers-elasticsearch.svg?style=flat-square)](https://www.npmjs.com/package/feathers-elasticsearch)
-
-[feathers-elasticsearch](https://github.com/feathersjs-ecosystem/feathers-elasticsearch/) is a database adapter for [Elasticsearch](https://www.elastic.co/products/elasticsearch). This adapter is not using any ORM, it is dealing with the database directly through the [elasticsearch.js client](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/quick-start.html).
-
+[feathers-esx](https://github.com/refrens/feathers-esx) is an extension for [feathers-elasticsearch](https://github.com/feathersjs-ecosystem/feathers-elasticsearch/) database adapter for [Elasticsearch](https://www.elastic.co/products/elasticsearch). This adapter is not using any ORM, it is dealing with the database directly through the [elasticsearch.js client](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/quick-start.html).
 
 ```bash
-$ npm install --save elasticsearch feathers-elasticsearch
+$ npm install --save elasticsearch @refrens/feathers-esx@latest
 ```
 
-> __Important:__ `feathers-elasticsearch` implements the [Feathers Common database adapter API](https://docs.feathersjs.com/api/databases/common.html) and [querying syntax](https://docs.feathersjs.com/api/databases/querying.html).
+> **Important:** `feathers-esx` implements the [Feathers Common database adapter API](https://docs.feathersjs.com/api/databases/common.html) and [querying syntax](https://docs.feathersjs.com/api/databases/querying.html).
 
 ## Getting Started
 
@@ -22,18 +17,21 @@ The following bare-bones example will create a `messages` endpoint and connect t
 ```js
 const feathers = require('@feathersjs/feathers');
 const elasticsearch = require('elasticsearch');
-const service = require('feathers-elasticsearch');
+const service = require('@refrens/feathers-esx');
 
-app.use('/messages', service({
-  Model: new elasticsearch.Client({
-    host: 'localhost:9200',
-    apiVersion: '5.0'
+app.use(
+  '/messages',
+  service({
+    Model: new elasticsearch.Client({
+      host: 'localhost:9200',
+      apiVersion: '5.0',
+    }),
+    elasticsearch: {
+      index: 'test',
+      type: 'messages',
+    },
   }),
-  elasticsearch: {
-    index: 'test',
-    type: 'messages'
-  }
-}));
+);
 ```
 
 ## Options
@@ -44,39 +42,39 @@ The following options can be passed when creating a new Elasticsearch service:
 - `elasticsearch` (**required**) - Configuration object for elasticsearch requests. The required properties are `index` and `type`. Apart from that you can specify anything that should be passed to **all** requests going to Elasticsearch. Another recognised property is [`refresh`](https://www.elastic.co/guide/en/elasticsearch/guide/2.x/near-real-time.html#refresh-api) which is set to `false` by default. Anything else use at your own risk.
 - `paginate` [optional] - A pagination object containing a `default` and `max` page size (see the [Pagination documentation](https://docs.feathersjs.com/api/databases/common.html#pagination)).
 - `esVersion` (default: '5.0') [optional] - A string indicating which version of Elasticsearch the service is supposed to be talking to. Based on this setting the service will choose compatible API. If you plan on using Elasticsearch 6.0+ features (e.g. join fields) it's quite important to have it set, as there were breaking changes in Elasticsearch 6.0.
-- `id` (default: '_id') [optional] - The id property of your documents in this service.
-- `parent` (default: '_parent') [optional] - The parent property, which is used to pass document's parent id.
-- `routing` (default: '_routing') [optional] - The routing property, which is used to pass document's routing parameter.
+- `id` (default: '\_id') [optional] - The id property of your documents in this service.
+- `parent` (default: '\_parent') [optional] - The parent property, which is used to pass document's parent id.
+- `routing` (default: '\_routing') [optional] - The routing property, which is used to pass document's routing parameter.
 - `join` (default: undefined) [optional] - Elasticsearch 6.0+ specific. The name of the [join field](https://www.elastic.co/guide/en/elasticsearch/reference/6.0/parent-join.html) defined in the mapping type used by the service. It is required for parent-child relationship features (e.g. setting a parent, `$child` and `$parent` queries) to work.
-- `meta` (default: '_meta') [optional] - The meta property of your documents in this service. The meta field is an object containing elasticsearch specific information, e.g. `_score`, `_type`, `_index`, `_parent`, `_routing` and so forth. It will be stripped off from the documents passed to the service.
+- `meta` (default: '\_meta') [optional] - The meta property of your documents in this service. The meta field is an object containing elasticsearch specific information, e.g. `_score`, `_type`, `_index`, `_parent`, `_routing` and so forth. It will be stripped off from the documents passed to the service.
 - `whitelist` (default: `['$prefix', '$wildcard', '$regexp', '$exists', '$missing', '$all', '$match', '$phrase', '$phrase_prefix', '$and', '$sqs', '$child', '$parent', '$nested', '$fields', '$path', '$type', '$query', '$operator']`) [optional] - The list of additional non-standard query parameters to allow, by default populated with all Elasticsearch specific ones. You can override, for example in order to restrict access to some queries (see the [options documentation](https://docs.feathersjs.com/api/databases/common.html#serviceoptions)).
 
 ## Complete Example
 
-Here's an example of a Feathers server that uses `feathers-elasticsearch`. 
+Here's an example of a Feathers server that uses `feathers-esx`.
 
 ```js
 const feathers = require('@feathersjs/feathers');
 const rest = require('@feathersjs/express/rest');
 const express = require('@feathersjs/express');
 
-const service = require('feathers-elasticsearch');
+const service = require('@refrens/feathers-esx');
 const elasticsearch = require('elasticsearch');
 
 const messageService = service({
   Model: new elasticsearch.Client({
     host: 'localhost:9200',
-    apiVersion: '6.0'
+    apiVersion: '6.0',
   }),
   paginate: {
     default: 10,
-    max: 50
+    max: 50,
   },
   elasticsearch: {
     index: 'test',
-    type: 'messages'
+    type: 'messages',
   },
-  esVersion: '6.0'
+  esVersion: '6.0',
 });
 
 // Initialize the application
@@ -89,7 +87,7 @@ app.use(express.urlencoded({ extended: true }));
 app.configure(express.rest());
 // Initialize your feathers plugin
 app.use('/messages', messageService);
-app.use(express.errorHandler());;
+app.use(express.errorHandler());
 
 app.listen(3030);
 
@@ -109,7 +107,7 @@ On top of the standard, cross-adapter [queries](querying.md), feathers-elasticse
 
 ```js
 query: {
-  $all: true
+  $all: true;
 }
 ```
 
@@ -120,7 +118,7 @@ query: {
 ```js
 query: {
   user: {
-    $prefix: 'bo'
+    $prefix: 'bo';
   }
 }
 ```
@@ -132,7 +130,7 @@ query: {
 ```js
 query: {
   user: {
-    $wildcard: 'B*b'
+    $wildcard: 'B*b';
   }
 }
 ```
@@ -144,18 +142,18 @@ query: {
 ```js
 query: {
   user: {
-    $regexp: 'Bo[xb]'
+    $regexp: 'Bo[xb]';
   }
 }
 ```
 
 ### $exists
 
-[Term level query `exists`](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-exists-query.html). Find all documents that have at least one non-null value in the original field (not analyzed). 
+[Term level query `exists`](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-exists-query.html). Find all documents that have at least one non-null value in the original field (not analyzed).
 
 ```js
 query: {
-  $exists: ['phone', 'address']
+  $exists: ['phone', 'address'];
 }
 ```
 
@@ -165,7 +163,7 @@ The inverse of [`exists`](https://www.elastic.co/guide/en/elasticsearch/referenc
 
 ```js
 query: {
-  $missing: ['phone', 'address']
+  $missing: ['phone', 'address'];
 }
 ```
 
@@ -176,7 +174,7 @@ query: {
 ```js
 query: {
   bio: {
-    $match: 'javascript'
+    $match: 'javascript';
   }
 }
 ```
@@ -188,7 +186,7 @@ query: {
 ```js
 query: {
   bio: {
-    $phrase: 'I like JavaScript'
+    $phrase: 'I like JavaScript';
   }
 }
 ```
@@ -200,7 +198,7 @@ query: {
 ```js
 query: {
   bio: {
-    $phrase_prefix: 'I like JavaS'
+    $phrase_prefix: 'I like JavaS';
   }
 }
 ```
@@ -213,7 +211,6 @@ Find all documents which have children matching the query. The `$child` query is
 **Elasticsearch 6.0 change**
 
 Prior to Elasticsearch 6.0, the `$type` parameter represents the child document type in the index. As of Elasticsearch 6.0, the `$type` parameter represents the child relationship name, as defined in the [join field](https://www.elastic.co/guide/en/elasticsearch/reference/6.0/parent-join.html).
-
 
 ```js
 query: {
@@ -249,13 +246,9 @@ query: {
 This operator does not translate directly to any Elasticsearch query, but it provides support for [Elasticsearch array datatype](https://www.elastic.co/guide/en/elasticsearch/reference/current/array.html).
 Find all documents which match all of the given criteria. As any field in Elasticsearch can contain an array, therefore sometimes it is important to match more than one value per field.
 
-
 ```js
 query: {
-  $and: [
-    { notes: { $match: 'javascript' } },
-    { notes: { $match: 'project' } }
-  ]
+  $and: [{ notes: { $match: 'javascript' } }, { notes: { $match: 'project' } }];
 }
 ```
 
@@ -263,10 +256,7 @@ There is also a shorthand version of `$and` for equality. For instance:
 
 ```js
 query: {
-  $and: [
-    { tags: 'javascript' },
-    { tags: 'react' }
-  ]
+  $and: [{ tags: 'javascript' }, { tags: 'react' }];
 }
 ```
 
@@ -274,7 +264,7 @@ Can be also expressed as:
 
 ```js
 query: {
-  tags: ['javascript', 'react']
+  tags: ['javascript', 'react'];
 }
 ```
 
@@ -294,7 +284,9 @@ query: {
   }
 }
 ```
+
 This can also be expressed in an URL as the following:
+
 ```http
 http://localhost:3030/users?$sqs[$fields][]=title^5&$sqs[$fields][]=description&$sqs[$query]=+like +javascript&$sqs[$operator]=and
 ```
@@ -307,12 +299,11 @@ Even though Elasticsearch's API changed in that matter, feathers-elasticsearch o
 
 ### Overview
 
-feathers-elasticsearch supports all CRUD operations for Elasticsearch types with parent mapping, and does that with the Elasticsearch constrains. Therefore:
+feathers-esx supports all CRUD operations for Elasticsearch types with parent mapping, and does that with the Elasticsearch constrains. Therefore:
 
 - each operation concering a single document (create, get, patch, update, remove) is required to provide parent id
 - creating documents in bulk (providing a list of documents) is the same as many single document operations, so parent id is required as well
 - to avoid any doubts, none of the query based operations (find, bulk patch, bulk remove) can use the parent id
-
 
 #### Elasticsearch <= 5.6
 
@@ -321,24 +312,22 @@ Parent id should be provided as part of the data for the create operations (sing
 ```javascript
 postService.create({
   _id: 123,
-  text: 'JavaScript may be flawed, but it\'s better than Java anyway.'
+  text: "JavaScript may be flawed, but it's better than Java anyway.",
 });
 
 commentService.create({
   _id: 1000,
   _parent: 123,
-  text: 'You cannot be serious.'
-})
+  text: 'You cannot be serious.',
+});
 ```
+
 Please note, that name of the parent property (`_parent` by default) is configurable through the service options, so that you can set it to whatever suits you.
 
 For all other operations (get, patch, update, remove), the parent id should be provided as part of the query:
 
 ```javascript
-childService.remove(
-  1000,
-  { query: { _parent: 123 } }
-);
+childService.remove(1000, { query: { _parent: 123 } });
 ```
 
 #### Elasticsearch >= 6.0
@@ -355,10 +344,10 @@ Let's consider the following mapping:
         text: {
           type: 'text'
         },
-        my_join_field: { 
+        my_join_field: {
           type: 'join',
           relations: {
-            post: 'comment' 
+            post: 'comment'
           }
         }
       }
@@ -372,32 +361,29 @@ Parent id (for children) and relationship name (for children and parents) should
 ```javascript
 docService.create({
   _id: 123,
-  text: 'JavaScript may be flawed, but it\'s better than Java anyway.',
-  my_join_field: 'post'
+  text: "JavaScript may be flawed, but it's better than Java anyway.",
+  my_join_field: 'post',
 });
 
 docService.create({
   _id: 1000,
   _parent: 123,
   text: 'You cannot be serious.',
-  my_join_field: 'comment'
-})
+  my_join_field: 'comment',
+});
 ```
 
-Please note, that name of the parent property ('_parent' by default) and the join property (`undefined` by default) are configurable through the service options, so that you can set it to whatever suits you.
+Please note, that name of the parent property ('\_parent' by default) and the join property (`undefined` by default) are configurable through the service options, so that you can set it to whatever suits you.
 
 For all other operations (get, patch, update, remove), the parent id should be provided as part of the query:
 
 ```javascript
-docService.remove(
-  1000,
-  { query: { _parent: 123 } }
-);
+docService.remove(1000, { query: { _parent: 123 } });
 ```
 
 ## Supported Elasticsearch versions
 
-feathers-elasticsearch is currently tested on Elasticsearch 5.0, 5.6, 6.6, 6.7, 6.8, 7.0 and 7.1 Please note, we have recently dropped support for version 2.4, as its life ended quite a while back. If you are still running Elasticsearch 2.4 and want to take advantage of feathers-elasticsearch, please use version 2.x of this package.
+feathers-esx is currently tested on Elasticsearch 5.0, 5.6, 6.6, 6.7, 6.8, 7.0 and 7.1 Please note, we have recently dropped support for version 2.4, as its life ended quite a while back. If you are still running Elasticsearch 2.4 and want to take advantage of feathers-elasticsearch, please use version 2.x of this package.
 
 ## Quirks
 
@@ -420,7 +406,7 @@ Please be aware that search visibility of the changes (creates, updates, patches
 
 ### Full-text search
 
-Currently feathers-elasticsearch supports most important full-text queries in their default form. Elasticsearch search allows additional parameters to be passed to each of those queries for fine-tuning. Those parameters can change behaviour and affect peformance of the queries therefore I believe they should not be exposed to the client. I am considering ways of adding them safely to the queries while retaining flexibility.
+Currently feathers-esx supports most important full-text queries in their default form. Elasticsearch search allows additional parameters to be passed to each of those queries for fine-tuning. Those parameters can change behaviour and affect peformance of the queries therefore I believe they should not be exposed to the client. I am considering ways of adding them safely to the queries while retaining flexibility.
 
 ### Performance considerations
 
@@ -433,27 +419,30 @@ The conceptual solution for that is quite simple. This behaviour will be configu
 An `upsert` parameter is available for the `create` operation that will update the document if it exists already instead of throwing an error.
 
 ```javascript
-postService.create({
-  _id: 123,
-  text: 'JavaScript may be flawed, but it\'s better than Ruby.'
-},
-{ 
-  upsert: true
-})
-
+postService.create(
+  {
+    _id: 123,
+    text: "JavaScript may be flawed, but it's better than Ruby.",
+  },
+  {
+    upsert: true,
+  },
+);
 ```
 
 Additionally, an `upsert` parameter is also available for the `update` operation that will create the document if it doesn't exist instead of throwing an error.
 
 ```javascript
-postService.update(123, {
-  _id: 123,
-  text: 'JavaScript may be flawed, but Feathers makes it fly.'
-},
-{ 
-  upsert: true
-})
-
+postService.update(
+  123,
+  {
+    _id: 123,
+    text: 'JavaScript may be flawed, but Feathers makes it fly.',
+  },
+  {
+    upsert: true,
+  },
+);
 ```
 
 ## Contributing
@@ -477,12 +466,6 @@ When you just want to run coverage:
 ```bash
 ES_VERSION=6.7.2 npm run coverage
 ```
-
-## Born out of need
-
-feathers-elasticsearch was born out of need. When I was building [Hacker Search](https://hacker-search.net) (a real time search engine for Hacker News), I chose Elasticsearch for the database and Feathers for the application framework. All well and good, the only snag was a missing adapter, which would marry the two together. I decided to take a detour from the main project and create the missing piece. Three weeks had passed and the result was... another project (typical, isn't it). Everything went to plan however, and Hacker Search has been happily using feathers-elasticsearch since its first release.
-
-If you want to see the adapter in action, jump on Hacker Search and watch the queries sent from the client. Feel free to play around with the API.
 
 ## License
 

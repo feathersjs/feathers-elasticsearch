@@ -10,20 +10,20 @@ const schema = [
             addresses: {
               type: 'nested',
               properties: {
-                street: { type: 'keyword' }
-              }
+                street: { type: 'keyword' },
+              },
             },
             phone: { type: 'keyword' },
             aka: {
               type: 'join',
               relations: {
-                real: 'alias'
-              }
-            }
-          }
-        }
-      }
-    }
+                real: 'alias',
+              },
+            },
+          },
+        },
+      },
+    },
   },
   {
     index: 'test-todos',
@@ -31,12 +31,12 @@ const schema = [
       mappings: {
         doc: {
           properties: {
-            text: { type: 'keyword' }
-          }
-        }
-      }
-    }
-  }
+            text: { type: 'keyword' },
+          },
+        },
+      },
+    },
+  },
 ];
 
 module.exports = schema;

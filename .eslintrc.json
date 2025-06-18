@@ -1,0 +1,16 @@
+{
+  "extends": ["@refrens/eslint-config/typescript", "@refrens/eslint-config/api"],
+  "rules": {
+    "@typescript-eslint/no-var-requires": "off",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars-experimental": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "ignoreRestSiblings": true,
+        "destructuredArrayIgnorePattern": "^_",
+        "argsIgnorePattern": "^_"
+      }
+    ]
+  }
+}

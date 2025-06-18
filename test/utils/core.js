@@ -7,10 +7,10 @@ const {
   removeProps,
   getDocDescriptor,
   getCompatVersion,
-  getCompatProp
+  getCompatProp,
 } = require('../../lib/utils/core');
 
-module.exports = function utilsCoreTests () {
+module.exports = function utilsCoreTests() {
   describe('getType', () => {
     it('should recognize number', () => {
       expect(getType(1)).to.equal('number');
@@ -48,10 +48,12 @@ module.exports = function utilsCoreTests () {
 
   describe('validateType', () => {
     it('should accept one validator as a string', () => {
+      // eslint-disable-next-line no-unused-expressions
       expect(validateType(1, 'val', 'number')).to.be.ok;
     });
 
     it('should accept multiple validators as an array', () => {
+      // eslint-disable-next-line no-unused-expressions
       expect(validateType(1, 'val', ['number', 'object'])).to.be.ok;
     });
 
@@ -61,7 +63,9 @@ module.exports = function utilsCoreTests () {
       expect(validateType(true, 'val', ['number', 'array', 'boolean'])).to.equal('boolean');
       expect(validateType(false, 'val', ['number', 'array', 'boolean'])).to.equal('boolean');
       expect(validateType(null, 'val', ['number', 'object', 'null'])).to.equal('null');
-      expect(validateType(undefined, 'val', ['number', 'object', 'undefined'])).to.equal('undefined');
+      expect(validateType(undefined, 'val', ['number', 'object', 'undefined'])).to.equal(
+        'undefined',
+      );
       expect(validateType(NaN, 'val', ['number', 'object', 'NaN'])).to.equal('NaN');
       expect(validateType([], 'val', ['number', 'array', 'undefined'])).to.equal('array');
       expect(validateType({}, 'val', ['number', 'object', 'undefined'])).to.equal('object');
@@ -70,10 +74,18 @@ module.exports = function utilsCoreTests () {
     it('should throw if none of the validators match', () => {
       expect(() => validateType(1, 'val', 'null')).to.throw(errors.BadRequest);
       expect(() => validateType(1, 'val', ['null', 'object', 'array'])).to.throw(errors.BadRequest);
-      expect(() => validateType('abc', 'val', ['number', 'object', 'undefined'])).to.throw(errors.BadRequest);
-      expect(() => validateType(true, 'val', ['number', 'object', 'array'])).to.throw(errors.BadRequest);
-      expect(() => validateType(null, 'val', ['number', 'object', 'string'])).to.throw(errors.BadRequest);
-      expect(() => validateType([], 'val', ['number', 'object', 'null'])).to.throw(errors.BadRequest);
+      expect(() => validateType('abc', 'val', ['number', 'object', 'undefined'])).to.throw(
+        errors.BadRequest,
+      );
+      expect(() => validateType(true, 'val', ['number', 'object', 'array'])).to.throw(
+        errors.BadRequest,
+      );
+      expect(() => validateType(null, 'val', ['number', 'object', 'string'])).to.throw(
+        errors.BadRequest,
+      );
+      expect(() => validateType([], 'val', ['number', 'object', 'null'])).to.throw(
+        errors.BadRequest,
+      );
     });
   });
 
@@ -84,33 +96,29 @@ module.exports = function utilsCoreTests () {
       object = {
         _id: 12,
         _meta: {
-          _index: 'test'
+          _index: 'test',
         },
-        age: 13
+        age: 13,
       };
     });
 
     it('should remove all properties from given list', () => {
-      expect(removeProps(object, '_id', '_meta')).to
-        .deep.equal({ age: 13 });
+      expect(removeProps(object, '_id', '_meta')).to.deep.equal({ age: 13 });
     });
 
     it('should not change the original object', () => {
       const objectSnapshot = JSON.stringify(object);
 
       removeProps(object);
-      expect(JSON.stringify(object)).to
-        .equal(objectSnapshot);
+      expect(JSON.stringify(object)).to.equal(objectSnapshot);
     });
 
     it('should work if some properties are not defined on the object', () => {
-      expect(removeProps(object, '_meta', 'not_there')).to
-        .deep.equal({ _id: 12, age: 13 });
+      expect(removeProps(object, '_meta', 'not_there')).to.deep.equal({ _id: 12, age: 13 });
     });
 
     it('should work if there are no props to remove', () => {
-      expect(removeProps(object)).to
-        .deep.equal(object);
+      expect(removeProps(object)).to.deep.equal(object);
     });
   });
 
@@ -124,7 +132,7 @@ module.exports = function utilsCoreTests () {
         parent: 'parent',
         routing: 'routing',
         join: 'aka',
-        meta: 'meta'
+        meta: 'meta',
       };
 
       doc = {
@@ -133,7 +141,7 @@ module.exports = function utilsCoreTests () {
         routing: 2,
         name: 'John',
         aka: 'alias',
-        meta: { _id: 13 }
+        meta: { _id: 13 },
       };
     });
 
@@ -143,7 +151,7 @@ module.exports = function utilsCoreTests () {
         parent: '1',
         routing: '2',
         join: 'alias',
-        doc: { name: 'John' }
+        doc: { name: 'John' },
       });
     });
 
@@ -155,7 +163,7 @@ module.exports = function utilsCoreTests () {
         parent: '1',
         routing: '1',
         join: 'alias',
-        doc: { name: 'John' }
+        doc: { name: 'John' },
       });
     });
 
@@ -167,7 +175,7 @@ module.exports = function utilsCoreTests () {
         parent: '1',
         routing: '2',
         join: undefined,
-        doc: { name: 'John', aka: 'alias' }
+        doc: { name: 'John', aka: 'alias' },
       });
     });
 
@@ -175,14 +183,13 @@ module.exports = function utilsCoreTests () {
       delete doc.parent;
       delete doc.routing;
 
-      expect(getDocDescriptor(service, doc, { parent: 10 }))
-        .to.deep.equal({
-          id: '13',
-          parent: '10',
-          routing: '10',
-          join: 'alias',
-          doc: { name: 'John' }
-        });
+      expect(getDocDescriptor(service, doc, { parent: 10 })).to.deep.equal({
+        id: '13',
+        parent: '10',
+        routing: '10',
+        join: 'alias',
+        doc: { name: 'John' },
+      });
     });
   });
 
@@ -201,7 +208,7 @@ module.exports = function utilsCoreTests () {
       expect(getCompatVersion(['1.2', '5.3'], '0.9', '1.0')).to.equal('1.0');
     });
 
-    it('should set default value for default version to \'5.0\'', () => {
+    it("should set default value for default version to '5.0'", () => {
       expect(getCompatVersion([], '0.9')).to.equal('5.0');
     });
   });
@@ -209,9 +216,9 @@ module.exports = function utilsCoreTests () {
   describe('getCompatProp', () => {
     it('should return the value identified by compatible version key', () => {
       const compatMap = {
-        2.4: 'version 2.4',
-        2.6: 'version 2.6',
-        '6.0': 'version 6.0'
+        '2.4': 'version 2.4',
+        '2.6': 'version 2.6',
+        '6.0': 'version 6.0',
       };
 
       expect(getCompatProp(compatMap, '2.4')).to.equal('version 2.4');

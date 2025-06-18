@@ -1,34 +1,39 @@
 const { expect } = require('chai');
 const { getCompatProp } = require('../../lib/utils');
 
-function find (app, serviceName, esVersion) {
+function find(app, serviceName, esVersion) {
   describe('find()', () => {
     it('should return empty array if no results found', () => {
-      return app.service(serviceName)
+      return app
+        .service(serviceName)
         .find({ query: { id: 'better-luck-next-time' } })
-        .then(results => {
+        .then((results) => {
+          // eslint-disable-next-line no-unused-expressions
           expect(results).to.be.an('array').and.be.empty;
         });
     });
 
     it('should return empty paginated results if no results found', () => {
-      return app.service(serviceName)
+      return app
+        .service(serviceName)
         .find({
           query: { id: 'better-luck-next-time' },
-          paginate: { default: 10 }
+          paginate: { default: 10 },
         })
-        .then(results => {
+        .then((results) => {
           expect(results.total).to.equal(0);
+          // eslint-disable-next-line no-unused-expressions
           expect(results.data).to.be.an('array').and.be.empty;
         });
     });
 
     it('should filter results by array parameter', () => {
-      return app.service(serviceName)
+      return app
+        .service(serviceName)
         .find({
-          query: { tags: ['legend', 'javascript'] }
+          query: { tags: ['legend', 'javascript'] },
         })
-        .then(results => {
+        .then((results) => {
           expect(results.length).to.equal(1);
           expect(results[0].name).to.equal('Douglas');
         });
@@ -36,114 +41,120 @@ function find (app, serviceName, esVersion) {
 
     describe('special filters', () => {
       it('can $prefix', () => {
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
-            query: { name: { $prefix: 'B' } }
+            query: { name: { $prefix: 'B' } },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(1);
             expect(results[0].name).to.equal('Bob');
           });
       });
 
       it('can $wildcard', () => {
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
-            query: { name: { $wildcard: 'B*b' } }
+            query: { name: { $wildcard: 'B*b' } },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(1);
             expect(results[0].name).to.equal('Bob');
           });
       });
 
       it('can $regexp', () => {
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
-            query: { name: { $regexp: 'Bo[xb]' } }
+            query: { name: { $regexp: 'Bo[xb]' } },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(1);
             expect(results[0].name).to.equal('Bob');
           });
       });
 
       it('can $all', () => {
-        const expectedLength = getCompatProp({
-          '5.0': 3,
-          '6.0': 6
-        }, esVersion);
+        const expectedLength = getCompatProp(
+          {
+            '5.0': 3,
+            '6.0': 6,
+          },
+          esVersion,
+        );
 
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
-            query: { $all: true }
+            query: { $all: true },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(expectedLength);
           });
       });
 
       it('can $match', () => {
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
-            query: { bio: { $match: 'I like JavaScript' } }
+            query: { bio: { $match: 'I like JavaScript' } },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(2);
           });
       });
 
       it('can $phrase', () => {
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
-            query: { bio: { $phrase: 'I like JavaScript' } }
+            query: { bio: { $phrase: 'I like JavaScript' } },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(1);
             expect(results[0].name).to.equal('Bob');
           });
       });
 
       it('can $phrase_prefix', () => {
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
-            query: { bio: { $phrase_prefix: 'I like JavaS' } }
+            query: { bio: { $phrase_prefix: 'I like JavaS' } },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(1);
             expect(results[0].name).to.equal('Bob');
           });
       });
 
       it('can $or correctly with other filters', () => {
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
             query: {
-              $or: [
-                { name: 'Moody' },
-                { name: 'Douglas' }
-              ],
-              bio: { $match: 'JavaScript legend' }
-            }
+              $or: [{ name: 'Moody' }, { name: 'Douglas' }],
+              bio: { $match: 'JavaScript legend' },
+            },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(1);
             expect(results[0].name).to.equal('Douglas');
           });
       });
 
       it('can $and', () => {
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
             query: {
               $sort: { name: 1 },
-              $and: [
-                { tags: 'javascript' },
-                { tags: 'programmer' }
-              ]
-            }
+              $and: [{ tags: 'javascript' }, { tags: 'programmer' }],
+            },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(2);
             expect(results[0].name).to.equal('Bob');
             expect(results[1].name).to.equal('Douglas');
@@ -151,43 +162,38 @@ function find (app, serviceName, esVersion) {
       });
 
       it('can $sqs (simple_query_string)', () => {
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
             query: {
               $sort: { name: 1 },
               $sqs: {
-                $fields: [
-                  'bio',
-                  'name^5'
-                ],
+                $fields: ['bio', 'name^5'],
                 $query: '+like -javascript',
-                $operator: 'and'
-              }
-            }
+                $operator: 'and',
+              },
+            },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(1);
             expect(results[0].name).to.equal('Moody');
           });
       });
 
       it('can $sqs (simple_query_string) with other filters', () => {
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
             query: {
               $sort: { name: 1 },
-              $and: [
-                { tags: 'javascript' }
-              ],
+              $and: [{ tags: 'javascript' }],
               $sqs: {
-                $fields: [
-                  'bio'
-                ],
-                $query: '-legend'
-              }
-            }
+                $fields: ['bio'],
+                $query: '-legend',
+              },
+            },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(1);
             expect(results[0].name).to.equal('Bob');
           });
@@ -196,20 +202,21 @@ function find (app, serviceName, esVersion) {
       it('can $child', () => {
         const types = {
           '5.0': 'aka',
-          '6.0': 'alias'
+          '6.0': 'alias',
         };
 
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
             query: {
               $sort: { name: 1 },
               $child: {
                 $type: getCompatProp(types, esVersion),
-                name: 'Teacher'
-              }
-            }
+                name: 'Teacher',
+              },
+            },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(2);
             expect(results[0].name).to.equal('Douglas');
             expect(results[1].name).to.equal('Moody');
@@ -219,20 +226,21 @@ function find (app, serviceName, esVersion) {
       it('can $parent', () => {
         const types = {
           '5.0': 'people',
-          '6.0': 'real'
+          '6.0': 'real',
         };
 
-        return app.service('aka')
+        return app
+          .service('aka')
           .find({
             query: {
               $sort: { name: 1 },
               $parent: {
                 $type: getCompatProp(types, esVersion),
-                name: 'Douglas'
-              }
-            }
+                name: 'Douglas',
+              },
+            },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(2);
             expect(results[0].name).to.equal('Teacher');
             expect(results[1].name).to.equal('The Master');
@@ -240,48 +248,54 @@ function find (app, serviceName, esVersion) {
       });
 
       it('can $nested', () => {
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
             query: {
               $nested: {
-                $path: 'addresses',
-                'addresses.street': '1 The Road'
-              }
-            }
+                '$path': 'addresses',
+                'addresses.street': '1 The Road',
+              },
+            },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(1);
             expect(results[0].name).to.equal('Bob');
           });
       });
 
       it('can $exists', () => {
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
             query: {
-              $exists: ['phone']
-            }
+              $exists: ['phone'],
+            },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(1);
             expect(results[0].name).to.equal('Douglas');
           });
       });
 
       it('can $missing', () => {
-        const expectedLength = getCompatProp({
-          '5.0': 2,
-          '6.0': 5
-        }, esVersion);
+        const expectedLength = getCompatProp(
+          {
+            '5.0': 2,
+            '6.0': 5,
+          },
+          esVersion,
+        );
 
-        return app.service(serviceName)
+        return app
+          .service(serviceName)
           .find({
             query: {
               $sort: { name: 1 },
-              $missing: ['phone']
-            }
+              $missing: ['phone'],
+            },
           })
-          .then(results => {
+          .then((results) => {
             expect(results.length).to.equal(expectedLength);
             expect(results[0].name).to.equal('Bob');
             expect(results[1].name).to.equal('Moody');
