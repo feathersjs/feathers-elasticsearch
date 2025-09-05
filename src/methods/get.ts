@@ -1,9 +1,9 @@
 'use strict';
 
 import { errors } from '@feathersjs/errors';
-import { mapGet, getDocDescriptor, getQueryLength } from '../utils/index.js';
+import { mapGet, getDocDescriptor, getQueryLength } from '../utils/index';
 
-export function get(service, id, params) {
+export function get(service, id, params: any = {}) {
   const { filters, query } = service.filterQuery(params);
   const queryLength = getQueryLength(service, query);
 
@@ -28,12 +28,16 @@ export function get(service, id, params) {
   const { routing } = getDocDescriptor(service, query);
   const getParams = Object.assign(
     {
+      index: filters.$index || service.index,
       _source: filters.$select,
       id: String(id),
-      routing,
     },
     service.esParams
   );
+  
+  if (routing !== undefined) {
+    getParams.routing = routing;
+  }
 
   return service.Model.get(getParams).then((result) =>
     mapGet(result, service.id, service.meta, service.join)

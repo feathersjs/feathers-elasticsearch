@@ -1,11 +1,15 @@
 'use strict';
 
-import { mapBulk, getDocDescriptor } from '../utils/index.js';
-import { getBulk } from './get-bulk.js';
+import { mapBulk, getDocDescriptor } from '../utils/index';
+import { getBulk } from './get-bulk';
 
 function getBulkCreateParams(service, data, params) {
+  const { filters } = service.filterQuery(params);
+  const index = filters?.$index || service.index;
+  
   return Object.assign(
     {
+      index,
       body: data.reduce((result, item) => {
         const { id, parent, routing, join, doc } = getDocDescriptor(service, item);
         const method = id !== undefined && !params.upsert ? 'create' : 'index';
@@ -17,7 +21,12 @@ function getBulkCreateParams(service, data, params) {
           };
         }
 
-        result.push({ [method]: { _id: id, routing } });
+        const op: any = { [method]: { _index: index, _id: id } };
+        if (routing) {
+          op[method].routing = routing;
+        }
+        
+        result.push(op);
         result.push(doc);
 
         return result;

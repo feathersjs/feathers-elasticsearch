@@ -8,7 +8,7 @@ const {
   getDocDescriptor,
   getCompatVersion,
   getCompatProp,
-} = require("../../src/utils/core");
+} = require("../../lib/utils/core");
 
 module.exports = function utilsCoreTests() {
   describe("getType", () => {

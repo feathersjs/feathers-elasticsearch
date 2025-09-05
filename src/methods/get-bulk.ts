@@ -1,6 +1,6 @@
 'use strict';
 
-import { mapGet } from '../utils/index.js';
+import { mapGet } from '../utils/index';
 
 export function getBulk(service, docs, params) {
   const { filters } = service.filterQuery(params);

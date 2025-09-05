@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 
-function get (app, serviceName) {
+function get (app, _serviceName) {
   describe('get()', () => {
     it('should get an item with specified parent', () => {
       return app.service('aka')

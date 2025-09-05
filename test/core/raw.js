@@ -1,5 +1,5 @@
 const { expect } = require("chai");
-const { getCompatProp } = require("../../src/utils");
+const { getCompatProp } = require("../../lib/utils");
 
 function raw(app, serviceName, esVersion) {
   describe("raw()", () => {

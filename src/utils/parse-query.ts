@@ -1,6 +1,6 @@
 'use strict';
 
-import { removeProps, getType, validateType } from './core.js';
+import { removeProps, getType, validateType } from './core';
 
 const queryCriteriaMap = {
   $nin: 'must_not.terms',
@@ -23,11 +23,11 @@ const specialQueryHandlers = {
   $and,
   $all,
   $sqs,
-  $nested,
-  $exists: (...args) => $existsOr$missing('must', ...args),
-  $missing: (...args) => $existsOr$missing('must_not', ...args),
-  $child: (...args) => $childOr$parent('$child', ...args),
-  $parent: (...args) => $childOr$parent('$parent', ...args),
+  $nested: (value, esQuery, idProp) => $nested(value, esQuery, idProp),
+  $exists: (...args: any[]) => $existsOr$missing('must', ...(args as [any, any])),
+  $missing: (...args: any[]) => $existsOr$missing('must_not', ...(args as [any, any])),
+  $child: (value, esQuery, idProp) => $childOr$parent('$child', value, esQuery, idProp),
+  $parent: (value, esQuery, idProp) => $childOr$parent('$parent', value, esQuery, idProp),
 };
 
 function $or(value, esQuery, idProp) {
@@ -97,7 +97,7 @@ function $sqs(value, esQuery) {
   return esQuery;
 }
 
-function $childOr$parent(queryType, value, esQuery) {
+function $childOr$parent(queryType, value, esQuery, idProp) {
   const queryName = queryType === '$child' ? 'has_child' : 'has_parent';
   const typeName = queryType === '$child' ? 'type' : 'parent_type';
 
@@ -108,7 +108,7 @@ function $childOr$parent(queryType, value, esQuery) {
   validateType(value, queryType, 'object');
   validateType(value.$type, `${queryType}.$type`, 'string');
 
-  const subQuery = parseQuery(removeProps(value, '$type'));
+  const subQuery = parseQuery(removeProps(value, '$type'), idProp);
 
   if (!subQuery) {
     return esQuery;
@@ -127,7 +127,7 @@ function $childOr$parent(queryType, value, esQuery) {
   return esQuery;
 }
 
-function $nested(value, esQuery) {
+function $nested(value, esQuery, idProp) {
   if (value === null || value === undefined) {
     return esQuery;
   }
@@ -135,7 +135,7 @@ function $nested(value, esQuery) {
   validateType(value, '$nested', 'object');
   validateType(value.$path, '$nested.$path', 'string');
 
-  const subQuery = parseQuery(removeProps(value, '$path'));
+  const subQuery = parseQuery(removeProps(value, '$path'), idProp);
 
   if (!subQuery) {
     return esQuery;
@@ -178,7 +178,7 @@ export function parseQuery(query, idProp) {
     return null;
   }
 
-  const bool = Object.entries(query).reduce((result, [key, value]) => {
+  const bool = Object.entries(query).reduce((result: any, [key, value]) => {
     const type = getType(value);
 
     // The search can be done by ids as well.
@@ -197,7 +197,7 @@ export function parseQuery(query, idProp) {
     if (type !== 'object') {
       result.filter = result.filter || [];
       if (type === 'array') {
-        value.forEach((value) => result.filter.push({ term: { [key]: value } }));
+        (value as any[]).forEach((value) => result.filter.push({ term: { [key]: value } }));
       } else {
         result.filter.push({ term: { [key]: value } });
       }
@@ -213,6 +213,7 @@ export function parseQuery(query, idProp) {
         const [section, term, operand] = queryCriteriaMap[criterion].split('.');
 
         result[section] = result[section] || [];
+        
         result[section].push({
           [term]: {
             [key]: operand ? { [operand]: value[criterion] } : value[criterion],

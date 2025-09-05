@@ -1,5 +1,5 @@
-import { removeProps, getDocDescriptor } from '../utils/index.js';
-import { get } from './get.js';
+import { removeProps, getDocDescriptor } from '../utils/index';
+import { get } from './get';
 
 function getCreateParams(service, docDescriptor) {
   let { id, parent, routing, join, doc } = docDescriptor;
@@ -19,13 +19,18 @@ function getCreateParams(service, docDescriptor) {
   return Object.assign({ id, routing, body: doc }, service.esParams);
 }
 
-export function create(service, data, params) {
+export function create(service, data, params: any = {}) {
   const docDescriptor = getDocDescriptor(service, data);
   const { id, routing } = docDescriptor;
   const createParams = getCreateParams(service, docDescriptor);
   const getParams = Object.assign(removeProps(params, 'query', 'upsert'), {
-    query: Object.assign({ [service.routing]: routing }, params.query),
+    query: params.query || {}
   });
+  
+  // If we have routing (parent document), pass it in the query for the get operation
+  if (routing !== undefined) {
+    getParams.query = Object.assign({}, getParams.query, { [service.parent]: routing });
+  }
   // Elasticsearch `create` expects _id, whereas index does not.
   // Our `create` supports both forms.
   const method = id !== undefined && !params.upsert ? 'create' : 'index';

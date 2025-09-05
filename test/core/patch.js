@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const sinon = require("sinon");
-const { getCompatProp } = require("../../src/utils");
+const { getCompatProp } = require("../../lib/utils");
 
 function patch(app, serviceName, esVersion) {
   describe("patch()", () => {
@@ -188,8 +188,7 @@ function patch(app, serviceName, esVersion) {
           )
         )
         .then((results) => {
-          const [{ _meta: meta1, ...result1 }, { _meta: meta2, ...result2 }] =
-            results;
+          const [result1, result2] = results.map(({ _meta, ...rest }) => rest);
 
           expect(results).to.have.lengthOf(2);
           expect(result1).to.deep.equal({ age: 20, id: "patchMeA" });

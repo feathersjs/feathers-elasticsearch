@@ -1,9 +1,9 @@
-'use strict'
+'use strict';
 
-import { removeProps } from './core.js'
+import { removeProps } from './core';
 
-export * from './core.js'
-export * from './parse-query.js'
+export * from './core';
+export * from './parse-query';
 
 export function mapFind(results, idProp, metaProp, joinProp, filters, hasPagination) {
   const data = results.hits.hits.map((result) => mapGet(result, idProp, metaProp, joinProp))

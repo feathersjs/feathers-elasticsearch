@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const errors = require("@feathersjs/errors");
 
-const { parseQuery } = require("../../src/utils");
+const { parseQuery } = require("../../lib/utils");
 
 module.exports = function parseQueryTests() {
   describe("parseQuery", () => {

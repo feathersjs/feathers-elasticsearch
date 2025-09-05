@@ -1,9 +1,9 @@
-const elasticsearch = require("elasticsearch");
-const { getCompatVersion, getCompatProp } = require("../src/utils/core");
+const { Client } = require("@elastic/elasticsearch");
+const { getCompatVersion, getCompatProp } = require("../lib/utils/core");
 
 let apiVersion = null;
 let client = null;
-const schemaVersions = ["5.0", "6.0", "7.0"];
+const schemaVersions = ["5.0", "6.0", "7.0", "8.0"];
 
 const compatVersion = getCompatVersion(schemaVersions, getApiVersion());
 const compatSchema = require(`./schema-${compatVersion}`);
@@ -22,6 +22,9 @@ function getServiceConfig(serviceName) {
       index: serviceName === "aka" ? "test-people" : `test-${serviceName}`,
       type: "_doc",
     },
+    "8.0": {
+      index: serviceName === "aka" ? "test-people" : `test-${serviceName}`,
+    },
   };
 
   return Object.assign(
@@ -32,11 +35,10 @@ function getServiceConfig(serviceName) {
 
 function getApiVersion() {
   if (!apiVersion) {
-    const esVersion = process.env.ES_VERSION || "5.0.0";
+    const esVersion = process.env.ES_VERSION || "8.0.0";
     const [major, minor] = esVersion.split(".").slice(0, 2);
 
-    // elasticsearch client 15.5 does not support api 5.0 - 5.5
-    apiVersion = +major === 5 && +minor < 6 ? "5.6" : `${major}.${minor}`;
+    apiVersion = `${major}.${minor}`;
   }
 
   return apiVersion;
@@ -44,33 +46,45 @@ function getApiVersion() {
 
 function getClient() {
   if (!client) {
-    client = new elasticsearch.Client({
-      host: "localhost:9200",
-      apiVersion: getApiVersion(),
+    client = new Client({
+      node: process.env.ELASTICSEARCH_URL || "http://localhost:9201",
     });
   }
 
   return client;
 }
 
-function deleteSchema() {
-  const index = compatSchema.map((indexSetup) => indexSetup.index);
+async function deleteSchema() {
+  const indices = compatSchema.map((indexSetup) => indexSetup.index);
 
-  return getClient()
-    .indices.delete({ index })
-    .catch((err) => err.status !== 404 && Promise.reject(err));
+  for (const index of indices) {
+    try {
+      await getClient().indices.delete({ index });
+    } catch (err) {
+      // Ignore 404 errors (index doesn't exist)
+      if (err.meta && err.meta.statusCode !== 404) {
+        throw err;
+      }
+    }
+  }
 }
 
-function createSchema() {
-  return compatSchema.reduce(
-    (result, indexSetup) =>
-      result.then(() => getClient().indices.create(indexSetup)),
-    Promise.resolve()
-  );
+async function createSchema() {
+  for (const indexSetup of compatSchema) {
+    try {
+      await getClient().indices.create(indexSetup);
+    } catch (err) {
+      // Ignore 400 errors for index already exists
+      if (err.meta && err.meta.statusCode !== 400) {
+        throw err;
+      }
+    }
+  }
 }
 
-function resetSchema() {
-  return deleteSchema().then(createSchema);
+async function resetSchema() {
+  await deleteSchema();
+  await createSchema();
 }
 
 module.exports = {

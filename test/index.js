@@ -3,111 +3,47 @@ const adapterTests = require("@feathersjs/adapter-tests");
 
 const feathers = require("@feathersjs/feathers");
 const errors = require("@feathersjs/errors");
-const service = require("../src");
+const service = require("../lib");
 const db = require("../test-utils/test-db");
 const coreTests = require("./core");
-const { getCompatProp } = require("../src/utils/core");
-const testSuite = adapterTests([
-  ".options",
-  ".events",
-  "._get",
-  "._find",
-  "._create",
-  "._update",
-  "._patch",
-  "._remove",
-  ".get",
-  ".get + $select",
-  ".get + id + query",
-  ".get + id + query id",
-  ".get + NotFound",
-  ".find",
-  ".remove",
-  ".remove + $select",
-  ".remove + id + query",
-  ".remove + multi",
-  ".remove + id + query id",
-  ".update",
-  ".update + $select",
-  ".update + id + query",
-  ".update + NotFound",
-  ".patch",
-  ".patch + $select",
-  ".patch + id + query",
-  ".patch multiple",
-  ".patch multi query",
-  ".patch + NotFound",
-  ".create",
-  ".create + $select",
-  ".create multi",
-  "internal .find",
-  "internal .get",
-  "internal .create",
-  "internal .update",
-  "internal .patch",
-  "internal .remove",
-  ".find + equal",
-  ".find + equal multiple",
-  ".find + $sort",
-  ".find + $sort + string",
-  ".find + $limit",
-  ".find + $limit 0",
-  ".find + $skip",
-  ".find + $select",
-  ".find + $or",
-  ".find + $in",
-  ".find + $nin",
-  ".find + $lt",
-  ".find + $lte",
-  ".find + $gt",
-  ".find + $gte",
-  ".find + $ne",
-  ".find + $gt + $lt + $sort",
-  ".find + $or nested + $sort",
-  ".find + paginate",
-  ".find + paginate + $limit + $skip",
-  ".find + paginate + $limit 0",
-  ".find + paginate + params",
-  ".remove + id + query id",
-  ".update + id + query id",
-  ".patch + id + query id",
-]);
+const { getCompatProp } = require("../lib/utils/core");
 
 describe("Elasticsearch Service", () => {
   const app = feathers();
   const serviceName = "people";
   const esVersion = db.getApiVersion();
 
-  before(() => {
-    return db.resetSchema().then(() => {
-      app.use(
-        `/${serviceName}`,
-        service({
-          Model: db.getClient(),
-          events: ["testing"],
-          id: "id",
-          esVersion,
-          elasticsearch: db.getServiceConfig(serviceName),
-        })
-      );
-      app.use(
-        "/aka",
-        service({
-          Model: db.getClient(),
-          id: "id",
-          parent: "parent",
-          esVersion,
-          elasticsearch: db.getServiceConfig("aka"),
-          join: getCompatProp({ "6.0": "aka" }, esVersion),
-        })
-      );
-    });
+  before(async () => {
+    await db.resetSchema();
+    app.use(
+      `/${serviceName}`,
+      service({
+        Model: db.getClient(),
+        events: ["testing"],
+        id: "id",
+        esVersion,
+        elasticsearch: db.getServiceConfig(serviceName),
+      })
+    );
+    app.use(
+      "/aka",
+      service({
+        Model: db.getClient(),
+        id: "id",
+        parent: "parent",
+        esVersion,
+        elasticsearch: db.getServiceConfig("aka"),
+        join: getCompatProp({ "6.0": "aka" }, esVersion),
+      })
+    );
   });
 
-  after(() => db.deleteSchema());
+  after(async () => {
+    await db.deleteSchema();
+  });
 
   it("is CommonJS compatible", () => {
-    expect(typeof require("../src")).to.equal("function");
+    expect(typeof require("../lib")).to.equal("function");
   });
 
   describe("Initialization", () => {
@@ -124,7 +60,7 @@ describe("Elasticsearch Service", () => {
     });
   });
 
-  testSuite(app, errors, "people", "id");
+  adapterTests(app, errors, "people", "id");
 
   describe("Specific Elasticsearch tests", () => {
     before(async () => {

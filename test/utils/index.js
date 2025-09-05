@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 
-const { mapFind, mapGet, mapPatch, mapBulk } = require("../../src/utils");
+const { mapFind, mapGet, mapPatch, mapBulk } = require("../../lib/utils");
 
 const parseQueryTests = require("./parse-query.js");
 const coreUtilsTests = require("./core.js");

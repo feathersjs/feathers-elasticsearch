@@ -8,7 +8,7 @@ export function raw(service, method, params) {
 
   if (typeof service.Model[primaryMethod] === "undefined") {
     return Promise.reject(
-      errors.MethodNotAllowed(`There is no query method ${primaryMethod}.`)
+      new errors.MethodNotAllowed(`There is no query method ${primaryMethod}.`)
     );
   }
 
@@ -17,7 +17,7 @@ export function raw(service, method, params) {
     typeof service.Model[primaryMethod][secondaryMethod] === "undefined"
   ) {
     return Promise.reject(
-      errors.MethodNotAllowed(
+      new errors.MethodNotAllowed(
         `There is no query method ${primaryMethod}.${secondaryMethod}.`
       )
     );

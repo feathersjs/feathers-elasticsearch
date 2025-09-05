@@ -8,7 +8,7 @@ function update (app, serviceName) {
 
       return service
         .create({ name: 'Bob', id: 'BobId' })
-        .then(value => service.update('BobId', { name: 'Box', id: 'BobId' }))
+        .then(_value => service.update('BobId', { name: 'Box', id: 'BobId' }))
         .then(result => {
           expect(result.name).to.equal('Box');
           expect(result.id).to.equal('BobId');
