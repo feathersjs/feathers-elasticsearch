@@ -1,5 +1,5 @@
 /* eslint-env node */
-const js = require('@eslint/js');
+const js = require('@eslint/js')
 
 module.exports = [
   {
@@ -7,13 +7,34 @@ module.exports = [
   },
   js.configs.recommended,
   {
-    files: ['src/**/*.js'],
+    files: ['src/**/*.ts'],
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: 'module'
+      sourceType: 'module',
+      parser: require('@typescript-eslint/parser'),
+      parserOptions: {
+        project: './tsconfig.json'
+      },
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        setTimeout: 'readonly'
+      }
+    },
+    plugins: {
+      '@typescript-eslint': require('@typescript-eslint/eslint-plugin')
     },
     rules: {
-      semi: ['error', 'always']
+      semi: ['error', 'always'],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_'
+        }
+      ]
     }
   },
   {
@@ -35,7 +56,7 @@ module.exports = [
     },
     rules: {
       semi: ['error', 'always'],
-      'no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }]
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
     }
   },
   {
@@ -51,4 +72,4 @@ module.exports = [
       }
     }
   }
-];
+]

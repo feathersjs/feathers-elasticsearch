@@ -1,42 +1,42 @@
-const { Client } = require("@elastic/elasticsearch");
-const { getCompatVersion, getCompatProp } = require("../lib/utils/core");
+const { Client } = require('@elastic/elasticsearch');
+const { getCompatVersion, getCompatProp } = require('../lib/utils/core');
 
 let apiVersion = null;
 let client = null;
-const schemaVersions = ["5.0", "6.0", "7.0", "8.0"];
+const schemaVersions = ['5.0', '6.0', '7.0', '8.0'];
 
 const compatVersion = getCompatVersion(schemaVersions, getApiVersion());
 const compatSchema = require(`./schema-${compatVersion}`);
 
 function getServiceConfig(serviceName) {
   const configs = {
-    "5.0": {
-      index: "test",
-      type: serviceName,
+    '5.0': {
+      index: 'test',
+      type: serviceName
     },
-    "6.0": {
-      index: serviceName === "aka" ? "test-people" : `test-${serviceName}`,
-      type: "doc",
+    '6.0': {
+      index: serviceName === 'aka' ? 'test-people' : `test-${serviceName}`,
+      type: 'doc'
     },
-    "7.0": {
-      index: serviceName === "aka" ? "test-people" : `test-${serviceName}`,
-      type: "_doc",
+    '7.0': {
+      index: serviceName === 'aka' ? 'test-people' : `test-${serviceName}`,
+      type: '_doc'
     },
-    "8.0": {
-      index: serviceName === "aka" ? "test-people" : `test-${serviceName}`,
+    '8.0': {
+      index: serviceName === 'aka' ? 'test-people' : `test-${serviceName}`
     },
+    '9.0': {
+      index: serviceName === 'aka' ? 'test-people' : `test-${serviceName}`
+    }
   };
 
-  return Object.assign(
-    { refresh: true },
-    getCompatProp(configs, getApiVersion())
-  );
+  return Object.assign({ refresh: true }, getCompatProp(configs, getApiVersion()));
 }
 
 function getApiVersion() {
   if (!apiVersion) {
-    const esVersion = process.env.ES_VERSION || "8.0.0";
-    const [major, minor] = esVersion.split(".").slice(0, 2);
+    const esVersion = process.env.ES_VERSION || '8.0.0';
+    const [major, minor] = esVersion.split('.').slice(0, 2);
 
     apiVersion = `${major}.${minor}`;
   }
@@ -47,7 +47,7 @@ function getApiVersion() {
 function getClient() {
   if (!client) {
     client = new Client({
-      node: process.env.ELASTICSEARCH_URL || "http://localhost:9201",
+      node: process.env.ELASTICSEARCH_URL || 'http://localhost:9201'
     });
   }
 
@@ -93,5 +93,5 @@ module.exports = {
   getServiceConfig,
   resetSchema,
   deleteSchema,
-  createSchema,
+  createSchema
 };

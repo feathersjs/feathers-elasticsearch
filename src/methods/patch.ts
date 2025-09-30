@@ -1,8 +1,9 @@
 'use strict';
 
 import { getDocDescriptor, getQueryLength, mapPatch } from '../utils/index';
+import { ElasticsearchServiceParams } from '../types';
 
-export function patch(service, id, data, params: any = {}) {
+export function patch(service: any, id: any, data: any, params: ElasticsearchServiceParams = {}) {
   const { filters, query } = service.filterQuery(params);
   const { routing } = getDocDescriptor(service, query);
   const { doc } = getDocDescriptor(service, data);
@@ -26,5 +27,5 @@ export function patch(service, id, data, params: any = {}) {
 
   return queryPromise
     .then(() => service.Model.update(updateParams))
-    .then((result) => mapPatch(result, service.id, service.meta, service.join));
+    .then((result: any) => mapPatch(result, service.id, service.meta, service.join));
 }

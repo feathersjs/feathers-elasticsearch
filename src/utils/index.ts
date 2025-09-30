@@ -1,63 +1,139 @@
 'use strict';
 
 import { removeProps } from './core';
+import { ESSearchResponse, ESHit, ESBulkResponseItem } from '../types';
 
 export * from './core';
 export * from './parse-query';
+export * from './params';
+export { ESSearchResponse, ESHit, ESBulkResponseItem } from '../types';
 
-export function mapFind(results, idProp, metaProp, joinProp, filters, hasPagination) {
-  const data = results.hits.hits.map((result) => mapGet(result, idProp, metaProp, joinProp))
+/**
+ * Maps Elasticsearch find results to Feathers format
+ * @param results - Raw Elasticsearch search response
+ * @param idProp - Property name for document ID
+ * @param metaProp - Property name for metadata
+ * @param joinProp - Property name for join field
+ * @param filters - Query filters
+ * @param hasPagination - Whether pagination is enabled
+ * @returns Formatted results (array or paginated object)
+ */
+export function mapFind<T = Record<string, unknown>>(
+  results: ESSearchResponse<T>,
+  idProp: string,
+  metaProp: string,
+  joinProp?: string,
+  filters?: Record<string, unknown>,
+  hasPagination?: boolean
+): T[] | { total: number; skip: number; limit: number; data: T[] } {
+  const data = results.hits.hits.map((result) => mapGet(result, idProp, metaProp, joinProp));
 
   if (hasPagination) {
-    const total = typeof results.hits.total === 'object' ? results.hits.total.value : results.hits.total
+    const total = typeof results.hits.total === 'object' ? results.hits.total.value : results.hits.total;
 
     return {
       total,
-      skip: filters.$skip,
-      limit: filters.$limit,
+      skip: (filters?.$skip as number) || 0,
+      limit: (filters?.$limit as number) || 0,
       data
-    }
+    };
   }
 
-  return data
+  return data;
 }
 
-export function mapGet(item, idProp, metaProp, joinProp) {
-  return mapItem(item, idProp, metaProp, joinProp)
+/**
+ * Maps a single Elasticsearch document to Feathers format
+ * @param item - Raw Elasticsearch hit
+ * @param idProp - Property name for document ID
+ * @param metaProp - Property name for metadata
+ * @param joinProp - Property name for join field
+ * @returns Formatted document
+ */
+export function mapGet<T = Record<string, unknown>>(
+  item: ESHit<T>,
+  idProp: string,
+  metaProp: string,
+  joinProp?: string
+): T & Record<string, unknown> {
+  return mapItem(item, idProp, metaProp, joinProp);
 }
 
-export function mapPatch(item, idProp, metaProp, joinProp) {
-  const normalizedItem = removeProps(item, 'get')
+/**
+ * Maps a patched Elasticsearch document to Feathers format
+ * @param item - Raw Elasticsearch update response
+ * @param idProp - Property name for document ID
+ * @param metaProp - Property name for metadata
+ * @param joinProp - Property name for join field
+ * @returns Formatted document
+ */
+export function mapPatch<T = Record<string, unknown>>(
+  item: Record<string, unknown>,
+  idProp: string,
+  metaProp: string,
+  joinProp?: string
+): T & Record<string, unknown> {
+  const normalizedItem = removeProps(item, 'get');
 
-  normalizedItem._source = item.get && item.get._source
+  normalizedItem._source = (item as any).get && (item as any).get._source;
 
-  return mapItem(normalizedItem, idProp, metaProp, joinProp)
+  return mapItem(normalizedItem, idProp, metaProp, joinProp);
 }
 
-export function mapBulk(items, idProp, metaProp, joinProp) {
+/**
+ * Maps bulk operation results to Feathers format
+ * @param items - Array of bulk operation responses
+ * @param idProp - Property name for document ID
+ * @param metaProp - Property name for metadata
+ * @param joinProp - Property name for join field
+ * @returns Array of formatted documents
+ */
+export function mapBulk<T = Record<string, unknown>>(
+  items: ESBulkResponseItem[],
+  idProp: string,
+  metaProp: string,
+  joinProp?: string
+): Array<T & Record<string, unknown>> {
   return items.map((item) => {
     if (item.update) {
-      return mapPatch(item.update, idProp, metaProp, joinProp)
+      return mapPatch(item.update as unknown as Record<string, unknown>, idProp, metaProp, joinProp);
     }
 
-    return mapItem(item.create || item.index || item.delete, idProp, metaProp, joinProp)
-  })
+    const operation = item.create || item.index || item.delete;
+    if (operation) {
+      return mapItem(operation as unknown as ESHit<T>, idProp, metaProp, joinProp);
+    }
+    return {} as T & Record<string, unknown>;
+  });
 }
 
-export function mapItem(item, idProp, metaProp, joinProp) {
-  const meta = removeProps(item, '_source')
-  const result = Object.assign({ [metaProp]: meta }, item._source)
+/**
+ * Internal function to map Elasticsearch item to Feathers format
+ * @param item - Raw Elasticsearch item
+ * @param idProp - Property name for document ID
+ * @param metaProp - Property name for metadata
+ * @param joinProp - Property name for join field
+ * @returns Formatted document
+ */
+export function mapItem<T = Record<string, unknown>>(
+  item: ESHit<T> | Record<string, unknown>,
+  idProp: string,
+  metaProp: string,
+  joinProp?: string
+): T & Record<string, unknown> {
+  const meta = removeProps(item as Record<string, unknown>, '_source');
+  const result: Record<string, unknown> = Object.assign({ [metaProp]: meta }, (item as any)._source);
 
-  if (meta._id !== undefined) {
-    result[idProp] = meta._id
+  if ((meta as any)._id !== undefined) {
+    result[idProp] = (meta as any)._id;
   }
 
   if (joinProp && result[joinProp] && typeof result[joinProp] === 'object') {
-    const { parent, name } = result[joinProp]
-
-    result[metaProp]._parent = parent
-    result[joinProp] = name
+    const joinValue = result[joinProp] as { parent?: string; name?: string };
+    const metaObj = result[metaProp] as Record<string, unknown>;
+    metaObj._parent = joinValue.parent;
+    result[joinProp] = joinValue.name;
   }
 
-  return result
+  return result as T & Record<string, unknown>;
 }

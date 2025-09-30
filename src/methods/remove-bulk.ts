@@ -1,9 +1,11 @@
 "use strict";
 
-export function removeBulk(service, params) {
+import { ElasticsearchServiceParams } from '../types';
+
+export function removeBulk(service: any, params: ElasticsearchServiceParams) {
   const { find } = service.core;
 
-  return find(service, params).then((results) => {
+  return find(service, params).then((results: any) => {
     const found = Array.isArray(results) ? results : results.data;
 
     if (!found.length) {
@@ -12,7 +14,7 @@ export function removeBulk(service, params) {
 
     const bulkRemoveParams = Object.assign(
       {
-        body: found.map((item) => {
+        body: found.map((item: any) => {
           const {
             _id,
             _parent: parent,
@@ -25,12 +27,12 @@ export function removeBulk(service, params) {
       service.esParams
     );
 
-    return service.Model.bulk(bulkRemoveParams).then((results) =>
+    return service.Model.bulk(bulkRemoveParams).then((results: any) =>
       results.items
-        .map((item, index) =>
+        .map((item: any, index: any) =>
           item.delete.status === 200 ? found[index] : false
         )
-        .filter((item) => !!item)
+        .filter((item: any) => !!item)
     );
   });
 }

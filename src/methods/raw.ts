@@ -1,8 +1,9 @@
 "use strict";
 
 import { errors } from "@feathersjs/errors";
+import { ElasticsearchServiceParams } from '../types';
 
-export function raw(service, method, params) {
+export function raw(service: any, method: any, params: ElasticsearchServiceParams) {
   // handle client methods like indices.create
   const [primaryMethod, secondaryMethod] = method.split(".");
 

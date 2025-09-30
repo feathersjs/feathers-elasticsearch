@@ -1,18 +1,119 @@
-import { errors } from "@feathersjs/errors";
+import { errors } from '@feathersjs/errors';
+import { ElasticsearchError } from './types';
 
-export function errorHandler(error, id) {
-  if (error instanceof errors.FeathersError) {
-    throw error;
+/**
+ * Maps Elasticsearch error codes to Feathers error types
+ */
+const ERROR_MAP: Record<number, string> = {
+  400: 'BadRequest',
+  401: 'NotAuthenticated',
+  403: 'Forbidden',
+  404: 'NotFound',
+  409: 'Conflict',
+  422: 'Unprocessable',
+  500: 'GeneralError',
+  501: 'NotImplemented',
+  502: 'BadGateway',
+  503: 'Unavailable'
+};
+
+/**
+ * Formats error message with additional context
+ */
+function formatErrorMessage(error: ElasticsearchError, context?: string): string {
+  const baseMessage = error.message || 'An error occurred';
+  const esMessage = error.meta?.body?.error?.reason || error.meta?.body?.error?.type || '';
+
+  if (context && esMessage) {
+    return `${context}: ${esMessage}`;
+  } else if (esMessage) {
+    return esMessage;
   }
-  const statusCode = error.statusCode;
 
-  if (statusCode === 404 && id !== undefined) {
-    throw new errors.NotFound(`No record found for id '${id}'`);
-  }
-
-  if (errors[statusCode]) {
-    throw new errors[statusCode](error.message, error);
-  }
-
-  throw new errors.GeneralError(error.message, error);
+  return context ? `${context}: ${baseMessage}` : baseMessage;
 }
+
+/**
+ * Extracts detailed error information from Elasticsearch response
+ */
+function extractErrorDetails(error: ElasticsearchError): Record<string, any> | undefined {
+  const details: any = {};
+
+  if (error.meta?.body?.error) {
+    const esError = error.meta.body.error;
+
+    if (esError.caused_by) {
+      details.causedBy = esError.caused_by.reason;
+    }
+
+    if (esError.root_cause) {
+      details.rootCause = esError.root_cause.map((cause: any) => ({
+        type: cause.type,
+        reason: cause.reason
+      }));
+    }
+
+    if (esError.failures) {
+      details.failures = esError.failures;
+    }
+  }
+
+  return Object.keys(details).length > 0 ? details : undefined;
+}
+
+/**
+ * Handles Elasticsearch errors and converts them to Feathers errors
+ * @param error - The Elasticsearch error
+ * @param id - Optional document ID for context
+ * @param context - Optional context string for better error messages
+ * @returns Feathers error
+ */
+export function errorHandler(error: ElasticsearchError | any, id?: string | number, context?: string): Error {
+  // If already a Feathers error, just return it
+  if (error.className) {
+    return error;
+  }
+
+  // Check for specific error types first
+  if (
+    error.meta?.body?.error?.type === 'version_conflict_engine_exception' ||
+    (error.name === 'ResponseError' && error.meta?.statusCode === 409) ||
+    error.meta?.body?.status === 409
+  ) {
+    const message = formatErrorMessage(error, context);
+    return new errors.Conflict(message, { id });
+  }
+
+  // Extract status code from various error formats
+  const statusCode =
+    error.statusCode || error.status || error.meta?.statusCode || error.meta?.body?.status || 500;
+
+  // Get the appropriate error class
+  const ErrorClass = ERROR_MAP[statusCode];
+
+  if (!ErrorClass || !(errors as any)[ErrorClass]) {
+    // Fallback to GeneralError for unknown status codes
+    const message = formatErrorMessage(error, context);
+    const details = extractErrorDetails(error);
+
+    return new errors.GeneralError(message, {
+      statusCode,
+      ...(details && { details }),
+      ...(id && { id })
+    });
+  }
+
+  // Create the appropriate Feathers error
+  const message = formatErrorMessage(error, context);
+  const details = extractErrorDetails(error);
+
+  const FeathersError = (errors as any)[ErrorClass];
+
+  return new FeathersError(message, {
+    ...(details && { details }),
+    ...(id && { id })
+  });
+}
+
+// Default export for backward compatibility
+export default errorHandler;
