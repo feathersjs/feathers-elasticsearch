@@ -58,3 +58,24 @@ export function prepareRoutingParams(
   }
   return params
 }
+
+/**
+ * Merges ES params with per-operation overrides for refresh control
+ * PERFORMANCE: Allows configurable refresh per operation instead of global setting
+ * @param serviceEsParams - Service-level ES parameters
+ * @param operationParams - Operation-specific parameters from request
+ * @returns Merged parameters with refresh override if specified
+ */
+export function mergeESParamsWithRefresh(
+  serviceEsParams: Record<string, unknown> = {},
+  operationParams: ElasticsearchServiceParams = {}
+): Record<string, unknown> {
+  const merged = { ...serviceEsParams }
+
+  // Allow per-operation refresh override
+  if (operationParams.refresh !== undefined) {
+    merged.refresh = operationParams.refresh
+  }
+
+  return merged
+}

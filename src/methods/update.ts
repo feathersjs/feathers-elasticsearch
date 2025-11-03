@@ -1,28 +1,29 @@
 import { removeProps, getDocDescriptor } from '../utils/index'
-import { prepareGetParams } from '../utils/params'
+import { prepareGetParams, mergeESParamsWithRefresh } from '../utils/params'
 import { ElasticsearchServiceParams, ElasticAdapterInterface, DocDescriptor } from '../types'
 
 function getUpdateParams(
   service: ElasticAdapterInterface,
   docDescriptor: DocDescriptor,
-  filters: Record<string, unknown>
+  filters: Record<string, unknown>,
+  params: ElasticsearchServiceParams = {}
 ) {
   const { id, routing, doc } = docDescriptor
 
-  const params: Record<string, unknown> = {
+  const updateParams: Record<string, unknown> = {
     index: filters.$index || service.index,
     id: String(id),
     body: doc
   }
 
   if (routing !== undefined) {
-    params.routing = routing
+    updateParams.routing = routing
   }
 
-  // Merge esParams but exclude index if it's already set
-  const cleanEsParams = service.esParams ? { ...service.esParams } : {}
+  // PERFORMANCE: Merge esParams with per-operation refresh override
+  const cleanEsParams = mergeESParamsWithRefresh(service.esParams, params)
   delete cleanEsParams.index
-  return Object.assign(params, cleanEsParams)
+  return Object.assign(updateParams, cleanEsParams)
 }
 
 export function update(
@@ -35,7 +36,7 @@ export function update(
   const docDescriptor = getDocDescriptor(service, data, query, {
     [service.id]: id
   })
-  const updateParams = getUpdateParams(service, docDescriptor, filters)
+  const updateParams = getUpdateParams(service, docDescriptor, filters, params)
 
   if (params.upsert) {
     return service.Model.index(updateParams as never).then((result: unknown) =>

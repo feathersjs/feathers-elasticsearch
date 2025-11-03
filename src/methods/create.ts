@@ -1,9 +1,13 @@
 import { getDocDescriptor } from '../utils/index'
-import { prepareGetParams } from '../utils/params'
+import { prepareGetParams, mergeESParamsWithRefresh } from '../utils/params'
 import { ElasticsearchServiceParams, ElasticAdapterInterface, DocDescriptor, IndexRequest } from '../types'
 import { get } from './get'
 
-function getCreateParams(service: ElasticAdapterInterface, docDescriptor: DocDescriptor): IndexRequest {
+function getCreateParams(
+  service: ElasticAdapterInterface,
+  docDescriptor: DocDescriptor,
+  requestParams: ElasticsearchServiceParams = {}
+): IndexRequest {
   let { id, parent, routing, join, doc } = docDescriptor
 
   if (join) {
@@ -19,25 +23,25 @@ function getCreateParams(service: ElasticAdapterInterface, docDescriptor: DocDes
   }
 
   // Build params with required fields
-  const params: IndexRequest = {
+  const indexParams: IndexRequest = {
     index: service.index || '',
     document: doc
   }
 
   // Only add id if it's defined
   if (id !== undefined) {
-    params.id = id
+    indexParams.id = id
   }
 
   // Only add routing if it's defined
   if (routing !== undefined) {
-    params.routing = routing
+    indexParams.routing = routing
   }
 
-  // Merge esParams but exclude index if it's already set
-  const cleanEsParams = service.esParams ? { ...service.esParams } : {}
-  delete (cleanEsParams as Record<string, unknown>).index
-  return Object.assign(params, cleanEsParams)
+  // PERFORMANCE: Merge esParams with per-operation refresh override
+  const cleanEsParams = mergeESParamsWithRefresh(service.esParams, requestParams)
+  delete cleanEsParams.index
+  return Object.assign(indexParams, cleanEsParams)
 }
 
 export function create(
@@ -47,7 +51,7 @@ export function create(
 ) {
   const docDescriptor = getDocDescriptor(service, data)
   const { id, routing } = docDescriptor
-  const createParams = getCreateParams(service, docDescriptor)
+  const createParams = getCreateParams(service, docDescriptor, params)
   const getParams = prepareGetParams(params, 'upsert')
 
   // If we have routing (parent document), pass it in the query for the get operation

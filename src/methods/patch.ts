@@ -1,6 +1,7 @@
 'use strict'
 
 import { getDocDescriptor, getQueryLength, mapPatch } from '../utils/index'
+import { mergeESParamsWithRefresh } from '../utils/params'
 import { ElasticsearchServiceParams, ElasticAdapterInterface } from '../types'
 
 export function patch(
@@ -13,12 +14,13 @@ export function patch(
   const { routing } = getDocDescriptor(service, query)
   const { doc } = getDocDescriptor(service, data)
 
+  // PERFORMANCE: Merge esParams with per-operation refresh override
   const updateParams: Record<string, unknown> = {
     index: filters.$index || service.index,
     id: String(id),
     body: { doc },
     _source: filters.$select || true,
-    ...service.esParams
+    ...mergeESParamsWithRefresh(service.esParams, params)
   }
 
   // Add routing if specified

@@ -1,6 +1,7 @@
 'use strict'
 
 import { getDocDescriptor } from '../utils/index'
+import { mergeESParamsWithRefresh } from '../utils/params'
 import { ElasticsearchServiceParams, ElasticAdapterInterface } from '../types'
 
 export function remove(
@@ -10,12 +11,14 @@ export function remove(
 ) {
   const { filters, query } = service.filterQuery(params)
   const { routing } = getDocDescriptor(service, query)
+
+  // PERFORMANCE: Merge esParams with per-operation refresh override
   const removeParams = Object.assign(
     {
       index: filters.$index || service.index,
       id: String(id)
     },
-    service.esParams
+    mergeESParamsWithRefresh(service.esParams, params)
   )
 
   if (routing !== undefined) {
