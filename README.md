@@ -1,25 +1,30 @@
 # feathers-elasticsearch
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/feathersjs-ecosystem/feathers-elasticsearch.svg)](https://greenkeeper.io/)
-
-[![Build Status](https://travis-ci.org/feathersjs-ecosystem/feathers-elasticsearch.svg?branch=master)](https://travis-ci.org/feathersjs-ecosystem/feathers-elasticsearch)
-[![Dependency Status](https://david-dm.org/feathersjs-ecosystem/feathers-elasticsearch/status.svg)](https://david-dm.org/feathersjs-ecosystem/feathers-elasticsearch)
+[![CI](https://github.com/feathersjs-ecosystem/feathers-elasticsearch/actions/workflows/test-matrix.yml/badge.svg)](https://github.com/feathersjs-ecosystem/feathers-elasticsearch/actions/workflows/test-matrix.yml)
+[![npm version](https://img.shields.io/npm/v/feathers-elasticsearch.svg)](https://www.npmjs.com/package/feathers-elasticsearch)
 [![Download Status](https://img.shields.io/npm/dm/feathers-elasticsearch.svg?style=flat-square)](https://www.npmjs.com/package/feathers-elasticsearch)
 
-[feathers-elasticsearch](https://github.com/feathersjs-ecosystem/feathers-elasticsearch/) is a database adapter for [Elasticsearch](https://www.elastic.co/products/elasticsearch). This adapter is not using any ORM, it is dealing with the database directly through the [elasticsearch.js client](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/quick-start.html).
+A [Feathers](https://feathersjs.com) database adapter for [Elasticsearch](https://www.elastic.co/elasticsearch/). This adapter provides a direct interface to Elasticsearch using the official [@elastic/elasticsearch](https://www.npmjs.com/package/@elastic/elasticsearch) client.
 
+## Installation
 
 ```bash
-$ npm install --save elasticsearch feathers-elasticsearch
+npm install feathers-elasticsearch @elastic/elasticsearch --save
 ```
 
-> __Important:__ `feathers-elasticsearch` implements the [Feathers Common database adapter API](https://docs.feathersjs.com/api/databases/common.html) and [querying syntax](https://docs.feathersjs.com/api/databases/querying.html).
+## Compatibility
+
+- **Feathers v5** (Dove)
+- **Elasticsearch 8.x and 9.x**
+- **Node.js 18+**
+
+> **Important:** `feathers-elasticsearch` implements the [Feathers Common database adapter API](https://docs.feathersjs.com/api/databases/common.html) and [querying syntax](https://docs.feathersjs.com/api/databases/querying.html).
 
 ---
 
 ## 🚨 Breaking Changes in v4.0.0
 
-Version 4.0.0 introduces significant **security improvements** that include breaking changes. Please review the migration guide below.
+Version 4.0.0 introduces **Feathers v5 compatibility**, significant **security improvements**, and **performance optimizations**. Please review the migration guide below.
 
 ### What Changed
 
