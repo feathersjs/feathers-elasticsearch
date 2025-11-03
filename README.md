@@ -201,6 +201,40 @@ If you don't provide a `security` configuration, these safe defaults are used:
 
 For complete security documentation, see [SECURITY.md](./SECURITY.md).
 
+## Performance Optimizations
+
+feathers-elasticsearch includes several performance optimizations:
+
+- **Content-Based Query Caching** - Improves cache hit rates from ~5-10% to ~50-90%
+- **Lean Mode** - Skip fetching full documents after bulk operations (60% faster)
+- **Configurable Refresh** - Per-operation control of index refresh timing
+- **Query Complexity Budgeting** - Protects cluster from expensive queries
+
+### Quick Examples
+
+```js
+// Lean mode for bulk operations (60% faster)
+await service.create(largeDataset, {
+  lean: true,        // Don't fetch documents back
+  refresh: false     // Don't wait for refresh
+})
+
+// Per-operation refresh control
+await service.patch(userId, updates, {
+  refresh: 'wait_for'  // Wait for changes to be visible
+})
+
+// Query complexity limits (default: 100)
+const service = new Service({
+  Model: esClient,
+  security: {
+    maxQueryComplexity: 150  // Adjust based on cluster capacity
+  }
+})
+```
+
+For complete performance documentation, see [PERFORMANCE_FEATURES.md](./PERFORMANCE_FEATURES.md).
+
 ## Complete Example
 
 Here's an example of a Feathers server that uses `feathers-elasticsearch`. 
