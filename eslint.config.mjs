@@ -1,9 +1,10 @@
-/* eslint-env node */
-const js = require('@eslint/js')
+import js from '@eslint/js'
+import tsPlugin from '@typescript-eslint/eslint-plugin'
+import tsParser from '@typescript-eslint/parser'
 
-module.exports = [
+export default [
   {
-    ignores: ['coverage/**', 'lib/**', 'node_modules/**', 'eslint.config.js', 'scripts/**']
+    ignores: ['coverage/**', 'lib/**', 'node_modules/**', 'scripts/**']
   },
   js.configs.recommended,
   {
@@ -11,7 +12,7 @@ module.exports = [
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
-      parser: require('@typescript-eslint/parser'),
+      parser: tsParser,
       parserOptions: {
         project: './tsconfig.json'
       },
@@ -22,11 +23,11 @@ module.exports = [
       }
     },
     plugins: {
-      '@typescript-eslint': require('@typescript-eslint/eslint-plugin')
+      '@typescript-eslint': tsPlugin
     },
     rules: {
       semi: ['error', 'always'],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
