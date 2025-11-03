@@ -55,36 +55,16 @@ function prepareBulkUpdateParams(
   operations: Array<Record<string, unknown>>,
   index: string,
   requestParams: ElasticsearchServiceParams
-): { params: Record<string, unknown>; needsRefresh: boolean } {
+): Record<string, unknown> {
   // PERFORMANCE: Merge esParams with per-operation refresh override
-  const params = Object.assign(
+  // Note: Elasticsearch bulk API supports refresh parameter directly
+  return Object.assign(
     {
       index,
       body: operations
     },
     mergeESParamsWithRefresh(service.esParams, requestParams)
   )
-
-  // Remove refresh from bulk params but return it separately
-  const needsRefresh = params.refresh as boolean
-  delete params.refresh
-
-  return { params, needsRefresh }
-}
-
-/**
- * Handles refresh if needed after bulk operation
- */
-async function handleRefresh(
-  service: ElasticAdapterInterface,
-  bulkResult: unknown,
-  needsRefresh: boolean,
-  index: string
-): Promise<unknown> {
-  if (needsRefresh) {
-    await service.Model.indices.refresh({ index })
-  }
-  return bulkResult
 }
 
 /**
@@ -201,19 +181,14 @@ export async function patchBulk(
   const operations = createBulkOperations(service, found, data, index)
 
   // Step 3: Prepare and execute bulk update
-  const { params: bulkUpdateParams, needsRefresh } = prepareBulkUpdateParams(
-    service,
-    operations,
-    index,
-    params
-  )
+  const bulkUpdateParams = prepareBulkUpdateParams(service, operations, index, params)
 
-  let bulkResult = (await service.Model.bulk(bulkUpdateParams as never)) as unknown as Record<string, unknown>
+  const bulkResult = (await service.Model.bulk(bulkUpdateParams as never)) as unknown as Record<
+    string,
+    unknown
+  >
 
-  // Step 4: Handle refresh if needed
-  bulkResult = (await handleRefresh(service, bulkResult, needsRefresh, index)) as Record<string, unknown>
-
-  // Step 5: Get updated document IDs
+  // Step 4: Get updated document IDs
   const updatedIds = getUpdatedIds(bulkResult)
 
   if (updatedIds.length === 0) {

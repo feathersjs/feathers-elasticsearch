@@ -2,9 +2,9 @@ name: Test Matrix
 
 on:
   push:
-    branches: [ main, master, dove ]
+    branches: [main, master, dove]
   pull_request:
-    branches: [ main, master, dove ]
+    branches: [main, master, dove]
 
 jobs:
   test:
@@ -18,48 +18,68 @@ jobs:
     name: Node ${{ matrix.node-version }} - ES ${{ matrix.elasticsearch-version }}
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    - name: Start Elasticsearch ${{ matrix.elasticsearch-version }}
-      run: |
-        docker run -d \
-          --name elasticsearch \
-          -p 9200:9200 \
-          -e "discovery.type=single-node" \
-          -e "xpack.security.enabled=false" \
-          -e "xpack.security.enrollment.enabled=false" \
-          docker.elastic.co/elasticsearch/elasticsearch:${{ matrix.elasticsearch-version }}
+      - name: Start Elasticsearch ${{ matrix.elasticsearch-version }}
+        run: |
+          docker run -d \
+            --name elasticsearch \
+            -p 9200:9200 \
+            -e "discovery.type=single-node" \
+            -e "xpack.security.enabled=false" \
+            -e "xpack.security.enrollment.enabled=false" \
+            docker.elastic.co/elasticsearch/elasticsearch:${{ matrix.elasticsearch-version }}
 
-    - name: Wait for Elasticsearch
-      run: |
-        for i in {1..30}; do
-          if curl -s "http://localhost:9200/_cluster/health" > /dev/null 2>&1; then
-            echo "Elasticsearch is ready"
-            break
-          fi
-          echo "Waiting for Elasticsearch..."
-          sleep 5
-        done
+      - name: Wait for Elasticsearch
+        run: |
+          echo "Waiting for Elasticsearch to be ready..."
+          for i in {1..60}; do
+            # Check cluster health status
+            HEALTH=$(curl -s "http://localhost:9200/_cluster/health" 2>/dev/null || echo "")
+            if [ ! -z "$HEALTH" ]; then
+              STATUS=$(echo $HEALTH | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+              echo "Attempt $i: Cluster status is '$STATUS'"
 
-    - name: Install dependencies
-      run: npm ci
+              # Wait for yellow or green status (yellow is ok for single-node)
+              if [ "$STATUS" = "yellow" ] || [ "$STATUS" = "green" ]; then
+                echo "Elasticsearch is ready!"
+                # Give it a bit more time to fully stabilize
+                sleep 5
+                curl -s "http://localhost:9200/_cluster/health?pretty"
+                break
+              fi
+            else
+              echo "Attempt $i: Elasticsearch not responding yet..."
+            fi
 
-    - name: Build
-      run: npm run build
+            if [ $i -eq 60 ]; then
+              echo "ERROR: Elasticsearch failed to become ready after 5 minutes"
+              docker logs elasticsearch
+              exit 1
+            fi
 
-    - name: Run tests
-      run: |
-        ES_VERSION=${{ matrix.elasticsearch-version }} \
-        ELASTICSEARCH_URL=http://localhost:9200 \
-        npm run mocha
+            sleep 5
+          done
 
-    - name: Upload coverage
-      if: matrix.node-version == '20' && matrix.elasticsearch-version == '8.15.0'
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage/lcov.info
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: |
+          ES_VERSION=${{ matrix.elasticsearch-version }} \
+          ELASTICSEARCH_URL=http://localhost:9200 \
+          npm run mocha
+
+      - name: Upload coverage
+        if: matrix.node-version == '20' && matrix.elasticsearch-version == '8.15.0'
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info

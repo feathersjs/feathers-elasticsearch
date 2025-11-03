@@ -14,14 +14,38 @@ const CACHE_MAX_SIZE = 1000
 const CACHE_MAX_AGE = 5 * 60 * 1000 // 5 minutes
 
 /**
+ * Recursively sort object keys for deterministic JSON serialization
+ * @param obj - Object to normalize
+ * @returns Normalized object with sorted keys
+ */
+function normalizeObject(obj: unknown): unknown {
+  if (obj === null || typeof obj !== 'object') {
+    return obj
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(normalizeObject)
+  }
+
+  const sorted: Record<string, unknown> = {}
+  Object.keys(obj as object)
+    .sort()
+    .forEach((key) => {
+      sorted[key] = normalizeObject((obj as Record<string, unknown>)[key])
+    })
+
+  return sorted
+}
+
+/**
  * Generate a stable hash for a query object
  * @param query - Query object to hash
  * @param idProp - ID property name
  * @returns Hash string
  */
 function hashQuery(query: Record<string, unknown>, idProp: string): string {
-  // Create deterministic string representation
-  const normalized = JSON.stringify(query, Object.keys(query).sort())
+  // Create deterministic string representation with deep key sorting
+  const normalized = JSON.stringify(normalizeObject(query))
   return createHash('sha256').update(`${normalized}:${idProp}`).digest('hex').slice(0, 16)
 }
 
