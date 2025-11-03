@@ -15,10 +15,18 @@ const CACHE_MAX_AGE = 5 * 60 * 1000 // 5 minutes
 
 /**
  * Recursively sort object keys for deterministic JSON serialization
+ * Handles special cases like NaN and functions to ensure proper cache keys
  * @param obj - Object to normalize
  * @returns Normalized object with sorted keys
  */
 function normalizeObject(obj: unknown): unknown {
+  // Handle special primitive cases that JSON.stringify doesn't handle well
+  if (typeof obj === 'number' && isNaN(obj)) {
+    return '__NaN__' // Special marker for NaN
+  }
+  if (typeof obj === 'function') {
+    return '__function__' // Special marker for functions
+  }
   if (obj === null || typeof obj !== 'object') {
     return obj
   }
