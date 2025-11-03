@@ -1,13 +1,53 @@
 'use strict'
 
-import { ESQuery, CachedQuery } from '../types'
+import { ESQuery } from '../types'
 import { getType, validateType } from './core'
 import { errors } from '@feathersjs/errors'
 import { $or, $and, $all, $sqs, $nested, $childOr$parent, $existsOr$missing } from './query-handlers/special'
 import { processCriteria, processTermQuery } from './query-handlers/criteria'
+import { createHash } from 'crypto'
 
-// Query cache for performance
-const queryCache = new WeakMap<Record<string, unknown>, CachedQuery>()
+// Content-based query cache for performance
+// Uses Map with hash keys for better hit rate vs WeakMap with object references
+const queryCache = new Map<string, { result: ESQuery | null; timestamp: number }>()
+const CACHE_MAX_SIZE = 1000
+const CACHE_MAX_AGE = 5 * 60 * 1000 // 5 minutes
+
+/**
+ * Generate a stable hash for a query object
+ * @param query - Query object to hash
+ * @param idProp - ID property name
+ * @returns Hash string
+ */
+function hashQuery(query: Record<string, unknown>, idProp: string): string {
+  // Create deterministic string representation
+  const normalized = JSON.stringify(query, Object.keys(query).sort())
+  return createHash('sha256').update(`${normalized}:${idProp}`).digest('hex').slice(0, 16)
+}
+
+/**
+ * Clean expired cache entries
+ */
+function cleanCache(): void {
+  const now = Date.now()
+  const toDelete: string[] = []
+
+  for (const [key, entry] of queryCache.entries()) {
+    if (now - entry.timestamp > CACHE_MAX_AGE) {
+      toDelete.push(key)
+    }
+  }
+
+  toDelete.forEach((key) => queryCache.delete(key))
+
+  // If still over max size, remove oldest entries
+  if (queryCache.size > CACHE_MAX_SIZE) {
+    const entries = Array.from(queryCache.entries()).sort((a, b) => a[1].timestamp - b[1].timestamp)
+
+    const toRemove = entries.slice(0, queryCache.size - CACHE_MAX_SIZE)
+    toRemove.forEach(([key]) => queryCache.delete(key))
+  }
+}
 
 type QueryHandler = (
   value: unknown,
@@ -57,15 +97,25 @@ export function parseQuery(
     return null
   }
 
-  // Check cache first
-  const cached = queryCache.get(query)
-  if (cached && cached.query === query) {
-    return cached.result
+  // Check content-based cache first (only for root level queries)
+  if (currentDepth === 0) {
+    const cacheKey = hashQuery(query, idProp)
+    const cached = queryCache.get(cacheKey)
+
+    if (cached) {
+      // Return cached result (deep clone to prevent mutations)
+      return cached.result ? JSON.parse(JSON.stringify(cached.result)) : null
+    }
   }
 
   // Validate query depth to prevent stack overflow attacks
   if (currentDepth > maxDepth) {
     throw new errors.BadRequest(`Query nesting exceeds maximum depth of ${maxDepth}`)
+  }
+
+  // Periodically clean cache (every ~100 queries)
+  if (currentDepth === 0 && Math.random() < 0.01) {
+    cleanCache()
   }
 
   const bool = Object.entries(query).reduce((result: ESQuery, [key, value]) => {
@@ -95,8 +145,14 @@ export function parseQuery(
 
   const queryResult = Object.keys(bool).length ? bool : null
 
-  // Cache the result
-  queryCache.set(query, { query: query as never, result: queryResult })
+  // Cache the result (only for root level queries)
+  if (currentDepth === 0) {
+    const cacheKey = hashQuery(query, idProp)
+    queryCache.set(cacheKey, {
+      result: queryResult,
+      timestamp: Date.now()
+    })
+  }
 
   return queryResult
 }
