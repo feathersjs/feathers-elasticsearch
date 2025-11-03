@@ -1,10 +1,14 @@
 'use strict'
 
 import { parseQuery, mapFind } from '../utils/index'
+import { validateQueryComplexity } from '../utils/security'
 import { ElasticsearchServiceParams, ElasticAdapterInterface, SearchRequest } from '../types'
 
 export function find(service: ElasticAdapterInterface, params: ElasticsearchServiceParams) {
   const { filters, query, paginate } = service.filterQuery(params)
+
+  // PERFORMANCE: Validate query complexity budget
+  validateQueryComplexity(query, service.security.maxQueryComplexity)
 
   // Move Elasticsearch-specific operators from filters back to query for parseQuery
   const esOperators = [

@@ -77,6 +77,13 @@ export interface SecurityConfig {
    * @default true
    */
   enableInputSanitization?: boolean
+
+  /**
+   * Maximum query complexity score
+   * PERFORMANCE: Limits expensive queries to protect cluster performance
+   * @default 100
+   */
+  maxQueryComplexity?: number
 }
 
 /**
@@ -92,7 +99,8 @@ export const DEFAULT_SECURITY_CONFIG: Required<SecurityConfig> = {
   allowedRawMethods: [],
   searchableFields: [],
   enableDetailedErrors: process.env.NODE_ENV !== 'production',
-  enableInputSanitization: true
+  enableInputSanitization: true,
+  maxQueryComplexity: 100
 }
 
 /**
@@ -343,6 +351,7 @@ export function sanitizeError(
 /**
  * Calculates the complexity score of a query
  * Used for rate limiting or rejection of overly complex queries
+ * PERFORMANCE: Enhanced complexity calculation with costs for expensive operations
  *
  * @param query - Query object
  * @returns Complexity score (higher = more complex)
@@ -357,17 +366,33 @@ export function calculateQueryComplexity(query: unknown): number {
   for (const key of Object.keys(query as object)) {
     const value = (query as Record<string, unknown>)[key]
 
-    // Each operator adds to complexity
+    // Base cost for each operator
     complexity += 1
 
+    // Expensive operators (wildcards, regex, fuzzy) have higher costs
+    if (key === '$wildcard') {
+      complexity += 5
+    } else if (key === '$regexp') {
+      complexity += 8
+    } else if (key === '$fuzzy') {
+      complexity += 6
+    } else if (key === '$prefix') {
+      complexity += 3
+    } else if (key === '$script') {
+      complexity += 15 // Scripts are very expensive
+    }
     // Nested operators are more expensive
-    if (key === '$or' || key === '$and') {
+    else if (key === '$or' || key === '$and') {
       if (Array.isArray(value)) {
         for (const item of value) {
           complexity += calculateQueryComplexity(item) * 2
         }
       }
-    } else if (key === '$nested' || key === '$child' || key === '$parent') {
+    } else if (key === '$nested') {
+      if (typeof value === 'object') {
+        complexity += calculateQueryComplexity(value) * 10 // Nested queries are very expensive
+      }
+    } else if (key === '$child' || key === '$parent') {
       if (typeof value === 'object') {
         complexity += calculateQueryComplexity(value) * 3
       }
@@ -380,4 +405,23 @@ export function calculateQueryComplexity(query: unknown): number {
   }
 
   return complexity
+}
+
+/**
+ * Validates query complexity against budget
+ * PERFORMANCE: Rejects overly complex queries to protect cluster performance
+ *
+ * @param query - Query object to validate
+ * @param maxComplexity - Maximum allowed complexity score
+ * @throws BadRequest if query exceeds complexity budget
+ */
+export function validateQueryComplexity(query: unknown, maxComplexity: number): void {
+  const complexity = calculateQueryComplexity(query)
+
+  if (complexity > maxComplexity) {
+    throw new errors.BadRequest(
+      `Query complexity (${complexity}) exceeds maximum allowed (${maxComplexity}). ` +
+        `Simplify your query by reducing nested conditions, wildcard searches, or array sizes.`
+    )
+  }
 }
