@@ -1,5 +1,5 @@
-import { ElasticAdapter } from './adapter';
-import { ElasticsearchServiceOptions, ElasticsearchServiceParams } from './types';
+import { ElasticAdapter } from './adapter'
+import { ElasticsearchServiceOptions, ElasticsearchServiceParams } from './types'
 
 // Types will be exported through module declaration
 
@@ -27,7 +27,7 @@ class Service extends ElasticAdapter {
    * })
    */
   async find(params?: ElasticsearchServiceParams) {
-    return this._find(params);
+    return this._find(params)
   }
 
   /**
@@ -40,7 +40,7 @@ class Service extends ElasticAdapter {
    * service.get('doc123')
    */
   async get(id: string | number, params?: ElasticsearchServiceParams) {
-    return this._get(id, params);
+    return this._get(id, params)
   }
 
   /**
@@ -64,7 +64,7 @@ class Service extends ElasticAdapter {
     data: Record<string, unknown> | Record<string, unknown>[],
     params?: ElasticsearchServiceParams
   ) {
-    return this._create(data, params);
+    return this._create(data, params)
   }
 
   /**
@@ -78,7 +78,7 @@ class Service extends ElasticAdapter {
    * service.update('doc123', { name: 'John Updated', age: 31 })
    */
   async update(id: string | number, data: Record<string, unknown>, params?: ElasticsearchServiceParams) {
-    return this._update(id, data, params);
+    return this._update(id, data, params)
   }
 
   /**
@@ -103,7 +103,7 @@ class Service extends ElasticAdapter {
     data: Record<string, unknown>,
     params?: ElasticsearchServiceParams
   ) {
-    return this._patch(id, data, params);
+    return this._patch(id, data, params)
   }
 
   /**
@@ -123,7 +123,7 @@ class Service extends ElasticAdapter {
    * })
    */
   async remove(id: string | number | null, params?: ElasticsearchServiceParams) {
-    return this._remove(id, params);
+    return this._remove(id, params)
   }
 
   /**
@@ -143,7 +143,7 @@ class Service extends ElasticAdapter {
    * service.raw('indices.getMapping')
    */
   async raw(method: string, params?: ElasticsearchServiceParams) {
-    return this._raw(method, params);
+    return this._raw(method, params)
   }
 }
 
@@ -164,7 +164,7 @@ class Service extends ElasticAdapter {
  * });
  */
 function service(options: ElasticsearchServiceOptions) {
-  return new Service(options);
+  return new Service(options)
 }
 
 // CommonJS compatible export

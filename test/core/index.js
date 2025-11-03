@@ -1,12 +1,12 @@
-'use strict';
+'use strict'
 
-const find = require('./find');
-const get = require('./get');
-const create = require('./create');
-const patch = require('./patch');
-const remove = require('./remove');
-const update = require('./update');
-const raw = require('./raw');
+const find = require('./find')
+const get = require('./get')
+const create = require('./create')
+const patch = require('./patch')
+const remove = require('./remove')
+const update = require('./update')
+const raw = require('./raw')
 
 module.exports = {
   find,
@@ -16,4 +16,4 @@ module.exports = {
   remove,
   update,
   raw
-};
+}

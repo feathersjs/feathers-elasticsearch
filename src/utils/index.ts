@@ -1,12 +1,12 @@
-'use strict';
+'use strict'
 
-import { removeProps } from './core';
-import { ESSearchResponse, ESHit, ESBulkResponseItem } from '../types';
+import { removeProps } from './core'
+import { ESSearchResponse, ESHit, ESBulkResponseItem } from '../types'
 
-export * from './core';
-export * from './parse-query';
-export * from './params';
-export { ESSearchResponse, ESHit, ESBulkResponseItem } from '../types';
+export * from './core'
+export * from './parse-query'
+export * from './params'
+export { ESSearchResponse, ESHit, ESBulkResponseItem } from '../types'
 
 /**
  * Maps Elasticsearch find results to Feathers format
@@ -26,20 +26,20 @@ export function mapFind<T = Record<string, unknown>>(
   filters?: Record<string, unknown>,
   hasPagination?: boolean
 ): T[] | { total: number; skip: number; limit: number; data: T[] } {
-  const data = results.hits.hits.map((result) => mapGet(result, idProp, metaProp, joinProp));
+  const data = results.hits.hits.map((result) => mapGet(result, idProp, metaProp, joinProp))
 
   if (hasPagination) {
-    const total = typeof results.hits.total === 'object' ? results.hits.total.value : results.hits.total;
+    const total = typeof results.hits.total === 'object' ? results.hits.total.value : results.hits.total
 
     return {
       total,
       skip: (filters?.$skip as number) || 0,
       limit: (filters?.$limit as number) || 0,
       data
-    };
+    }
   }
 
-  return data;
+  return data
 }
 
 /**
@@ -56,7 +56,7 @@ export function mapGet<T = Record<string, unknown>>(
   metaProp: string,
   joinProp?: string
 ): T & Record<string, unknown> {
-  return mapItem(item, idProp, metaProp, joinProp);
+  return mapItem(item, idProp, metaProp, joinProp)
 }
 
 /**
@@ -73,12 +73,12 @@ export function mapPatch<T = Record<string, unknown>>(
   metaProp: string,
   joinProp?: string
 ): T & Record<string, unknown> {
-  const normalizedItem = removeProps(item, 'get');
+  const normalizedItem = removeProps(item, 'get')
 
-  const itemWithGet = item as { get?: { _source?: unknown } };
-  normalizedItem._source = itemWithGet.get && itemWithGet.get._source;
+  const itemWithGet = item as { get?: { _source?: unknown } }
+  normalizedItem._source = itemWithGet.get && itemWithGet.get._source
 
-  return mapItem(normalizedItem, idProp, metaProp, joinProp);
+  return mapItem(normalizedItem, idProp, metaProp, joinProp)
 }
 
 /**
@@ -97,15 +97,15 @@ export function mapBulk<T = Record<string, unknown>>(
 ): Array<T & Record<string, unknown>> {
   return items.map((item) => {
     if (item.update) {
-      return mapPatch(item.update as unknown as Record<string, unknown>, idProp, metaProp, joinProp);
+      return mapPatch(item.update as unknown as Record<string, unknown>, idProp, metaProp, joinProp)
     }
 
-    const operation = item.create || item.index || item.delete;
+    const operation = item.create || item.index || item.delete
     if (operation) {
-      return mapItem(operation as unknown as ESHit<T>, idProp, metaProp, joinProp);
+      return mapItem(operation as unknown as ESHit<T>, idProp, metaProp, joinProp)
     }
-    return {} as T & Record<string, unknown>;
-  });
+    return {} as T & Record<string, unknown>
+  })
 }
 
 /**
@@ -122,21 +122,21 @@ export function mapItem<T = Record<string, unknown>>(
   metaProp: string,
   joinProp?: string
 ): T & Record<string, unknown> {
-  const meta = removeProps(item as Record<string, unknown>, '_source');
-  const itemWithSource = item as { _source?: unknown };
-  const result: Record<string, unknown> = Object.assign({ [metaProp]: meta }, itemWithSource._source);
+  const meta = removeProps(item as Record<string, unknown>, '_source')
+  const itemWithSource = item as { _source?: unknown }
+  const result: Record<string, unknown> = Object.assign({ [metaProp]: meta }, itemWithSource._source)
 
-  const metaWithId = meta as { _id?: unknown };
+  const metaWithId = meta as { _id?: unknown }
   if (metaWithId._id !== undefined) {
-    result[idProp] = metaWithId._id;
+    result[idProp] = metaWithId._id
   }
 
   if (joinProp && result[joinProp] && typeof result[joinProp] === 'object') {
-    const joinValue = result[joinProp] as { parent?: string; name?: string };
-    const metaObj = result[metaProp] as Record<string, unknown>;
-    metaObj._parent = joinValue.parent;
-    result[joinProp] = joinValue.name;
+    const joinValue = result[joinProp] as { parent?: string; name?: string }
+    const metaObj = result[metaProp] as Record<string, unknown>
+    metaObj._parent = joinValue.parent
+    result[joinProp] = joinValue.name
   }
 
-  return result as T & Record<string, unknown>;
+  return result as T & Record<string, unknown>
 }

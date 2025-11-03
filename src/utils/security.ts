@@ -3,12 +3,12 @@
  * against common attack vectors.
  */
 
-import { errors } from '@feathersjs/errors';
+import { errors } from '@feathersjs/errors'
 
 /**
  * Keys that could be used for prototype pollution attacks
  */
-const DANGEROUS_KEYS = ['__proto__', 'constructor', 'prototype'];
+const DANGEROUS_KEYS = ['__proto__', 'constructor', 'prototype']
 
 /**
  * Default security configuration
@@ -93,7 +93,7 @@ export const DEFAULT_SECURITY_CONFIG: Required<SecurityConfig> = {
   searchableFields: [],
   enableDetailedErrors: process.env.NODE_ENV !== 'production',
   enableInputSanitization: true
-};
+}
 
 /**
  * Sanitizes an object by removing dangerous keys that could be used
@@ -104,34 +104,34 @@ export const DEFAULT_SECURITY_CONFIG: Required<SecurityConfig> = {
  */
 export function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
   if (!obj || typeof obj !== 'object' || obj instanceof Date) {
-    return obj;
+    return obj
   }
 
   // Handle arrays
   if (Array.isArray(obj)) {
-    return obj.map((item) => sanitizeObject(item as Record<string, unknown>) as unknown) as unknown as T;
+    return obj.map((item) => sanitizeObject(item as Record<string, unknown>) as unknown) as unknown as T
   }
 
   // Create clean object without prototype
-  const sanitized = Object.create(null);
+  const sanitized = Object.create(null)
 
   for (const key of Object.keys(obj)) {
     // Skip dangerous keys
     if (DANGEROUS_KEYS.includes(key)) {
-      continue;
+      continue
     }
 
-    const value = obj[key];
+    const value = obj[key]
 
     // Recursively sanitize nested objects
     if (value && typeof value === 'object' && !(value instanceof Date)) {
-      sanitized[key] = sanitizeObject(value as Record<string, unknown>);
+      sanitized[key] = sanitizeObject(value as Record<string, unknown>)
     } else {
-      sanitized[key] = value;
+      sanitized[key] = value
     }
   }
 
-  return sanitized as T;
+  return sanitized as T
 }
 
 /**
@@ -144,32 +144,32 @@ export function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
  */
 export function validateQueryDepth(query: unknown, maxDepth: number, currentDepth: number = 0): void {
   if (!query || typeof query !== 'object') {
-    return;
+    return
   }
 
   if (currentDepth > maxDepth) {
-    throw new errors.BadRequest(`Query nesting exceeds maximum depth of ${maxDepth}`);
+    throw new errors.BadRequest(`Query nesting exceeds maximum depth of ${maxDepth}`)
   }
 
   // Check for nested query operators
-  const nestedOperators = ['$or', '$and', '$nested', '$child', '$parent'];
+  const nestedOperators = ['$or', '$and', '$nested', '$child', '$parent']
 
   for (const key of Object.keys(query as object)) {
-    const value = (query as Record<string, unknown>)[key];
+    const value = (query as Record<string, unknown>)[key]
 
     if (nestedOperators.includes(key)) {
       if (Array.isArray(value)) {
         // $or and $and contain arrays of queries
         for (const item of value) {
-          validateQueryDepth(item, maxDepth, currentDepth + 1);
+          validateQueryDepth(item, maxDepth, currentDepth + 1)
         }
       } else if (typeof value === 'object' && value !== null) {
         // $nested, $child, $parent contain nested objects
-        validateQueryDepth(value, maxDepth, currentDepth + 1);
+        validateQueryDepth(value, maxDepth, currentDepth + 1)
       }
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       // Recurse into nested objects
-      validateQueryDepth(value, maxDepth, currentDepth + 1);
+      validateQueryDepth(value, maxDepth, currentDepth + 1)
     }
   }
 }
@@ -186,7 +186,7 @@ export function validateArraySize(array: unknown[], fieldName: string, maxSize: 
   if (array.length > maxSize) {
     throw new errors.BadRequest(
       `Array size for '${fieldName}' (${array.length}) exceeds maximum of ${maxSize}`
-    );
+    )
   }
 }
 
@@ -198,10 +198,10 @@ export function validateArraySize(array: unknown[], fieldName: string, maxSize: 
  * @throws BadRequest if document exceeds maximum size
  */
 export function validateDocumentSize(data: unknown, maxSize: number): void {
-  const size = JSON.stringify(data).length;
+  const size = JSON.stringify(data).length
 
   if (size > maxSize) {
-    throw new errors.BadRequest(`Document size (${size} bytes) exceeds maximum allowed (${maxSize} bytes)`);
+    throw new errors.BadRequest(`Document size (${size} bytes) exceeds maximum allowed (${maxSize} bytes)`)
   }
 }
 
@@ -220,13 +220,13 @@ export function validateIndexName(
   allowedIndices: string[]
 ): string {
   // If no whitelist specified, only allow default index
-  const whitelist = allowedIndices.length > 0 ? allowedIndices : [defaultIndex];
+  const whitelist = allowedIndices.length > 0 ? allowedIndices : [defaultIndex]
 
   if (!whitelist.includes(requestedIndex)) {
-    throw new errors.Forbidden(`Access to index '${requestedIndex}' is not allowed`);
+    throw new errors.Forbidden(`Access to index '${requestedIndex}' is not allowed`)
   }
 
-  return requestedIndex;
+  return requestedIndex
 }
 
 /**
@@ -238,13 +238,13 @@ export function validateIndexName(
  */
 export function validateRawMethod(method: string, allowedMethods: string[]): void {
   if (allowedMethods.length === 0) {
-    throw new errors.MethodNotAllowed('Raw Elasticsearch API calls are disabled for security reasons');
+    throw new errors.MethodNotAllowed('Raw Elasticsearch API calls are disabled for security reasons')
   }
 
   if (!allowedMethods.includes(method)) {
     throw new errors.MethodNotAllowed(
       `Raw method '${method}' is not allowed. Allowed methods: ${allowedMethods.join(', ')}`
-    );
+    )
   }
 }
 
@@ -258,7 +258,7 @@ export function validateRawMethod(method: string, allowedMethods: string[]): voi
 export function sanitizeQueryString(queryString: string, maxLength: number): string {
   // Validate length
   if (queryString.length > maxLength) {
-    throw new errors.BadRequest(`Query string length (${queryString.length}) exceeds maximum of ${maxLength}`);
+    throw new errors.BadRequest(`Query string length (${queryString.length}) exceeds maximum of ${maxLength}`)
   }
 
   // Check for catastrophic backtracking patterns
@@ -266,15 +266,15 @@ export function sanitizeQueryString(queryString: string, maxLength: number): str
     /\/\.\*(\.\*)+/, // Regex with multiple .*
     /\(\.\*\)\+/, // (.*)+
     /\(\.\+\)\+/ // (.+)+
-  ];
+  ]
 
   for (const pattern of dangerousPatterns) {
     if (pattern.test(queryString)) {
-      throw new errors.BadRequest('Query string contains potentially dangerous regex pattern');
+      throw new errors.BadRequest('Query string contains potentially dangerous regex pattern')
     }
   }
 
-  return queryString;
+  return queryString
 }
 
 /**
@@ -287,17 +287,17 @@ export function sanitizeQueryString(queryString: string, maxLength: number): str
 export function validateSearchableFields(requestedFields: string[], allowedFields: string[]): void {
   // If no whitelist, allow all fields
   if (allowedFields.length === 0) {
-    return;
+    return
   }
 
   for (const field of requestedFields) {
     // Remove boost notation (e.g., "name^2" -> "name")
-    const cleanField = field.replace(/\^.*$/, '');
+    const cleanField = field.replace(/\^.*$/, '')
 
     if (!allowedFields.includes(cleanField)) {
       throw new errors.BadRequest(
         `Field '${field}' is not searchable. Allowed fields: ${allowedFields.join(', ')}`
-      );
+      )
     }
   }
 }
@@ -316,7 +316,7 @@ export function sanitizeError(
 ): Error & { statusCode?: number; code?: number; message: string } {
   if (enableDetailedErrors) {
     // In development, return full error details
-    return error;
+    return error
   }
 
   // In production, return generic error messages
@@ -325,19 +325,19 @@ export function sanitizeError(
     404: 'Resource not found',
     409: 'Resource conflict',
     500: 'Internal server error'
-  };
+  }
 
-  const statusCode = error.statusCode || error.code || 500;
-  const sanitized = { ...error };
+  const statusCode = error.statusCode || error.code || 500
+  const sanitized = { ...error }
 
-  sanitized.message = genericMessages[statusCode] || genericMessages[500];
+  sanitized.message = genericMessages[statusCode] || genericMessages[500]
 
   // Remove sensitive fields
-  delete sanitized.details;
-  delete sanitized.stack;
-  delete sanitized.meta;
+  delete sanitized.details
+  delete sanitized.stack
+  delete sanitized.meta
 
-  return sanitized;
+  return sanitized
 }
 
 /**
@@ -349,35 +349,35 @@ export function sanitizeError(
  */
 export function calculateQueryComplexity(query: unknown): number {
   if (!query || typeof query !== 'object') {
-    return 0;
+    return 0
   }
 
-  let complexity = 0;
+  let complexity = 0
 
   for (const key of Object.keys(query as object)) {
-    const value = (query as Record<string, unknown>)[key];
+    const value = (query as Record<string, unknown>)[key]
 
     // Each operator adds to complexity
-    complexity += 1;
+    complexity += 1
 
     // Nested operators are more expensive
     if (key === '$or' || key === '$and') {
       if (Array.isArray(value)) {
         for (const item of value) {
-          complexity += calculateQueryComplexity(item) * 2;
+          complexity += calculateQueryComplexity(item) * 2
         }
       }
     } else if (key === '$nested' || key === '$child' || key === '$parent') {
       if (typeof value === 'object') {
-        complexity += calculateQueryComplexity(value) * 3;
+        complexity += calculateQueryComplexity(value) * 3
       }
     } else if (typeof value === 'object' && !Array.isArray(value)) {
-      complexity += calculateQueryComplexity(value);
+      complexity += calculateQueryComplexity(value)
     } else if (Array.isArray(value)) {
       // Arrays add to complexity based on length
-      complexity += Math.min(value.length, 100);
+      complexity += Math.min(value.length, 100)
     }
   }
 
-  return complexity;
+  return complexity
 }

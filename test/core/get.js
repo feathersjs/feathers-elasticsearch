@@ -1,4 +1,4 @@
-const { expect } = require('chai');
+const { expect } = require('chai')
 
 function get (app, _serviceName) {
   describe('get()', () => {
@@ -6,10 +6,10 @@ function get (app, _serviceName) {
       return app.service('aka')
         .get('douglasAka', { query: { parent: 'douglas' } })
         .then(result => {
-          expect(result.name).to.equal('The Master');
-        });
-    });
-  });
+          expect(result.name).to.equal('The Master')
+        })
+    })
+  })
 }
 
-module.exports = get;
+module.exports = get

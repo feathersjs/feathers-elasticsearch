@@ -1,6 +1,6 @@
-import { ElasticsearchServiceOptions } from './types';
-import { errors } from '@feathersjs/errors';
-import { Client } from '@elastic/elasticsearch';
+import { ElasticsearchServiceOptions } from './types'
+import { errors } from '@feathersjs/errors'
+import { Client } from '@elastic/elasticsearch'
 
 /**
  * Validates adapter options and throws errors for missing required fields
@@ -9,20 +9,20 @@ import { Client } from '@elastic/elasticsearch';
  */
 export function validateOptions(options: Partial<ElasticsearchServiceOptions>): void {
   if (!options) {
-    throw new errors.BadRequest('Elasticsearch service requires `options`');
+    throw new errors.BadRequest('Elasticsearch service requires `options`')
   }
 
   if (!options.Model && !options.elasticsearch) {
     throw new errors.BadRequest(
       'Elasticsearch service requires `options.Model` or `options.elasticsearch` to be provided'
-    );
+    )
   }
 
-  const esConfig = options.elasticsearch as { index?: string } | undefined;
+  const esConfig = options.elasticsearch as { index?: string } | undefined
   if (!options.index && (!options.elasticsearch || !esConfig?.index)) {
     throw new errors.BadRequest(
       'Elasticsearch service requires `options.index` or `options.elasticsearch.index` to be provided'
-    );
+    )
   }
 }
 
@@ -38,10 +38,10 @@ export function setupPropertyAliases(
   properties.forEach((name) =>
     Object.defineProperty(instance, name, {
       get() {
-        return this.options[name];
+        return this.options[name]
       }
     })
-  );
+  )
 }
 
 /**
@@ -53,9 +53,9 @@ export function extractModelAndIndex(options: ElasticsearchServiceOptions): {
   Model: Client | Record<string, unknown>
   index: string
 } {
-  const Model = options.Model || options.elasticsearch;
-  const esConfig = options.elasticsearch as { index?: string } | undefined;
-  const index = options.index || esConfig?.index;
+  const Model = options.Model || options.elasticsearch
+  const esConfig = options.elasticsearch as { index?: string } | undefined
+  const index = options.index || esConfig?.index
 
-  return { Model: Model as Client, index: index as string };
+  return { Model: Model as Client, index: index as string }
 }

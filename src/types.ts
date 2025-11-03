@@ -1,5 +1,5 @@
-import { AdapterParams, PaginationOptions } from '@feathersjs/adapter-commons';
-import { Client } from '@elastic/elasticsearch';
+import { AdapterParams, PaginationOptions } from '@feathersjs/adapter-commons'
+import { Client } from '@elastic/elasticsearch'
 import type {
   SearchRequest,
   SearchResponse,
@@ -15,8 +15,8 @@ import type {
   BulkResponse,
   MgetRequest,
   MgetResponse
-} from '@elastic/elasticsearch/lib/api/types';
-import type { SecurityConfig } from './utils/security';
+} from '@elastic/elasticsearch/lib/api/types'
+import type { SecurityConfig } from './utils/security'
 
 // Re-export commonly used ES types
 export type {
@@ -34,7 +34,7 @@ export type {
   BulkResponse,
   MgetRequest,
   MgetResponse
-};
+}
 
 // Error Types
 export interface ElasticsearchErrorMeta {
@@ -313,7 +313,7 @@ export type ElasticsearchMethod<T = unknown> = (
 ) => Promise<T>
 
 // Re-export SecurityConfig for convenience
-export type { SecurityConfig } from './utils/security';
+export type { SecurityConfig } from './utils/security'
 
 // Utility Types
 export type ValidatorType =

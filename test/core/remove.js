@@ -1,5 +1,5 @@
-const { expect } = require('chai');
-const sinon = require('sinon');
+const { expect } = require('chai')
+const sinon = require('sinon')
 
 function remove (app, serviceName) {
   describe('remove()', () => {
@@ -10,9 +10,9 @@ function remove (app, serviceName) {
           { query: { id: 'better-luck-next-time' } }
         )
         .then(results => {
-          expect(results).to.be.an('array').and.be.empty;
-        });
-    });
+          expect(results).to.be.an('array').and.be.empty
+        })
+    })
 
     it('should remove an item with a specified parent', () => {
       return app.service('aka')
@@ -21,12 +21,12 @@ function remove (app, serviceName) {
           return app.service('aka').remove(
             'bobAka',
             { query: { parent: 'bob' } }
-          );
+          )
         })
         .then(result => {
-          expect(result.name).to.equal('Bobster');
-        });
-    });
+          expect(result.name).to.equal('Bobster')
+        })
+    })
 
     it('should remove items which have a parent (bulk)', () => {
       return app.service('aka')
@@ -41,13 +41,13 @@ function remove (app, serviceName) {
           )
         )
         .then(results => {
-          expect(results.length).to.equal(2);
-          expect(results[0].name).to.equal('remove me');
-          expect(results[0]._meta._parent).to.equal('bob');
-          expect(results[1].name).to.equal('remove me');
-          expect(results[1]._meta._parent).to.equal('moody');
-        });
-    });
+          expect(results.length).to.equal(2)
+          expect(results[0].name).to.equal('remove me')
+          expect(results[0]._meta._parent).to.equal('bob')
+          expect(results[1].name).to.equal('remove me')
+          expect(results[1]._meta._parent).to.equal('moody')
+        })
+    })
 
     it('should remove items selected with pagination (bulk)', () => {
       return app.service(serviceName)
@@ -65,11 +65,11 @@ function remove (app, serviceName) {
           )
         )
         .then(results => {
-          expect(results).to.have.lengthOf(2);
-          expect(results[0]).to.include({ name: 'remove me', no: 1 });
-          expect(results[1]).to.include({ name: 'remove me', no: 2 });
-        });
-    });
+          expect(results).to.have.lengthOf(2)
+          expect(results[0]).to.include({ name: 'remove me', no: 1 })
+          expect(results[1]).to.include({ name: 'remove me', no: 2 })
+        })
+    })
 
     it('should return only removed items (bulk)', () => {
       // It's easier to stub `bulk` then to try and make ES not to delete selected item.
@@ -80,7 +80,7 @@ function remove (app, serviceName) {
             { delete: { _id: 'bob', status: 200 } },
             { delete: { _id: 'douglas', status: 400 } }
           ]
-        }));
+        }))
 
       return app.service(serviceName)
         .remove(
@@ -88,11 +88,11 @@ function remove (app, serviceName) {
           { query: { $all: 1 } }
         )
         .then(results => {
-          expect(results).to.have.lengthOf(1);
+          expect(results).to.have.lengthOf(1)
         })
-        .catch().then(() => bulk.restore());
-    });
-  });
+        .catch().then(() => bulk.restore())
+    })
+  })
 }
 
-module.exports = remove;
+module.exports = remove

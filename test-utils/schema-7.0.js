@@ -33,6 +33,6 @@ const schema = [
       }
     }
   }
-];
+]
 
-module.exports = schema;
+module.exports = schema

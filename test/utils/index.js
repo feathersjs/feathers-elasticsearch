@@ -1,14 +1,14 @@
-const { expect } = require("chai");
+const { expect } = require("chai")
 
-const { mapFind, mapGet, mapPatch, mapBulk } = require("../../lib/utils");
+const { mapFind, mapGet, mapPatch, mapBulk } = require("../../lib/utils")
 
-const parseQueryTests = require("./parse-query.js");
-const coreUtilsTests = require("./core.js");
+const parseQueryTests = require("./parse-query.js")
+const coreUtilsTests = require("./core.js")
 
 describe("Elasticsearch utils", () => {
   describe("mapFind", () => {
-    let sourceResults;
-    let mappedResults;
+    let sourceResults
+    let mappedResults
 
     beforeEach(() => {
       sourceResults = {
@@ -32,7 +32,7 @@ describe("Elasticsearch utils", () => {
             },
           ],
         },
-      };
+      }
       mappedResults = [
         {
           _id: 12,
@@ -50,57 +50,57 @@ describe("Elasticsearch utils", () => {
             _type: "people",
           },
         },
-      ];
-    });
+      ]
+    })
 
     it("should swap around meta and the docs", () => {
-      const expectedResult = mappedResults;
+      const expectedResult = mappedResults
 
       expect(mapFind(sourceResults, "_id", "_meta")).to.deep.equal(
         expectedResult
-      );
-    });
+      )
+    })
 
     it("should returned paginated results when hasPagination is true", () => {
       const filters = {
         $skip: 10,
         $limit: 25,
-      };
+      }
       const expectedResult = {
         total: 2,
         skip: filters.$skip,
         limit: filters.$limit,
         data: mappedResults,
-      };
+      }
 
       expect(
         mapFind(sourceResults, "_id", "_meta", undefined, filters, true)
-      ).to.deep.equal(expectedResult);
-    });
+      ).to.deep.equal(expectedResult)
+    })
 
     it("should support `hits.total` as an object in the response", () => {
       const filters = {
         $skip: 10,
         $limit: 25,
-      };
+      }
       const expectedResult = {
         total: 2,
         skip: filters.$skip,
         limit: filters.$limit,
         data: mappedResults,
-      };
-      const { total } = sourceResults.hits;
+      }
+      const { total } = sourceResults.hits
 
-      sourceResults.hits.total = { value: total };
+      sourceResults.hits.total = { value: total }
 
       expect(
         mapFind(sourceResults, "_id", "_meta", undefined, filters, true)
-      ).to.deep.equal(expectedResult);
-    });
-  });
+      ).to.deep.equal(expectedResult)
+    })
+  })
 
   describe("mapGet", () => {
-    let item;
+    let item
 
     beforeEach(() => {
       item = {
@@ -116,8 +116,8 @@ describe("Elasticsearch utils", () => {
           },
         },
         found: true,
-      };
-    });
+      }
+    })
 
     it("should swap around meta and the doc", () => {
       const expectedResult = {
@@ -134,10 +134,10 @@ describe("Elasticsearch utils", () => {
           _index: "test",
           found: true,
         },
-      };
+      }
 
-      expect(mapGet(item, "_id", "_meta")).to.deep.equal(expectedResult);
-    });
+      expect(mapGet(item, "_id", "_meta")).to.deep.equal(expectedResult)
+    })
 
     it("should extract parent from join field when join prop provided", () => {
       const expectedResult = {
@@ -152,21 +152,21 @@ describe("Elasticsearch utils", () => {
           found: true,
           _parent: 1,
         },
-      };
+      }
 
-      expect(mapGet(item, "_id", "_meta", "aka")).to.deep.equal(expectedResult);
-    });
+      expect(mapGet(item, "_id", "_meta", "aka")).to.deep.equal(expectedResult)
+    })
 
     it("should not change the original item", () => {
-      const itemSnapshot = JSON.stringify(item);
+      const itemSnapshot = JSON.stringify(item)
 
-      mapGet(item, "_id", "_meta");
-      expect(item).to.deep.equal(JSON.parse(itemSnapshot));
-    });
-  });
+      mapGet(item, "_id", "_meta")
+      expect(item).to.deep.equal(JSON.parse(itemSnapshot))
+    })
+  })
 
   describe("mapPatch", () => {
-    let item;
+    let item
 
     beforeEach(() => {
       item = {
@@ -181,8 +181,8 @@ describe("Elasticsearch utils", () => {
           found: true,
         },
         result: "updated",
-      };
-    });
+      }
+    })
 
     it("should swap around meta and the doc", () => {
       const expectedResult = {
@@ -195,13 +195,13 @@ describe("Elasticsearch utils", () => {
           _index: "test",
           result: "updated",
         },
-      };
+      }
 
-      expect(mapPatch(item, "_id", "_meta")).to.deep.equal(expectedResult);
-    });
+      expect(mapPatch(item, "_id", "_meta")).to.deep.equal(expectedResult)
+    })
 
     it("should return just meta if patched document not present", () => {
-      delete item.get;
+      delete item.get
       const expectedResult = {
         _id: 12,
         _meta: {
@@ -210,18 +210,18 @@ describe("Elasticsearch utils", () => {
           _index: "test",
           result: "updated",
         },
-      };
+      }
 
-      expect(mapPatch(item, "_id", "_meta")).to.deep.equal(expectedResult);
-    });
+      expect(mapPatch(item, "_id", "_meta")).to.deep.equal(expectedResult)
+    })
 
     it("should not change the original item", () => {
-      const itemSnapshot = JSON.stringify(item);
+      const itemSnapshot = JSON.stringify(item)
 
-      mapPatch(item, "_id", "_meta");
-      expect(item).to.deep.equal(JSON.parse(itemSnapshot));
-    });
-  });
+      mapPatch(item, "_id", "_meta")
+      expect(item).to.deep.equal(JSON.parse(itemSnapshot))
+    })
+  })
 
   describe("mapBulk", () => {
     it("should get rid of action name property swap around meta and the doc", () => {
@@ -241,7 +241,7 @@ describe("Elasticsearch utils", () => {
             },
           },
         },
-      ];
+      ]
       const expectedResult = [
         { id: "12", _meta: { status: 409, _id: "12" } },
         { id: "13", _meta: { result: "created", _id: "13" } },
@@ -252,22 +252,22 @@ describe("Elasticsearch utils", () => {
           name: "Sunshine",
           aka: "alias",
         },
-      ];
+      ]
 
       expect(mapBulk(items, "id", "_meta", "aka")).to.deep.equal(
         expectedResult
-      );
-    });
+      )
+    })
 
     it("should not change original items", () => {
-      const items = [{ create: { status: 409, _id: "12" } }];
-      const itemsSnapshot = JSON.stringify(items);
+      const items = [{ create: { status: 409, _id: "12" } }]
+      const itemsSnapshot = JSON.stringify(items)
 
-      mapBulk(items, "id", "_meta");
-      expect(items).to.deep.equal(JSON.parse(itemsSnapshot));
-    });
-  });
+      mapBulk(items, "id", "_meta")
+      expect(items).to.deep.equal(JSON.parse(itemsSnapshot))
+    })
+  })
 
-  parseQueryTests();
-  coreUtilsTests();
-});
+  parseQueryTests()
+  coreUtilsTests()
+})

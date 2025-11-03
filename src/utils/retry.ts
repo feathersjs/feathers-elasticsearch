@@ -26,7 +26,7 @@ export const DEFAULT_RETRY_CONFIG: Required<RetryConfig> = {
     'ResponseError', // Only for specific status codes
     'RequestAbortedError'
   ]
-};
+}
 
 /**
  * Checks if an error is retryable based on its type and status
@@ -38,34 +38,34 @@ export function isRetryableError(
   error: Error & { name?: string; meta?: { statusCode?: number }; statusCode?: number },
   config: RetryConfig = {}
 ): boolean {
-  const mergedConfig = { ...DEFAULT_RETRY_CONFIG, ...config };
+  const mergedConfig = { ...DEFAULT_RETRY_CONFIG, ...config }
 
   // Check if it's a network/connection error
   if (error.name && mergedConfig.retryableErrors.includes(error.name)) {
     // For ResponseError, only retry on specific status codes
     if (error.name === 'ResponseError') {
-      const statusCode = (error.meta as { statusCode?: number })?.statusCode || error.statusCode;
+      const statusCode = (error.meta as { statusCode?: number })?.statusCode || error.statusCode
       // Retry on 429 (Too Many Requests), 502 (Bad Gateway), 503 (Service Unavailable), 504 (Gateway Timeout)
-      return statusCode !== undefined && [429, 502, 503, 504].includes(statusCode);
+      return statusCode !== undefined && [429, 502, 503, 504].includes(statusCode)
     }
-    return true;
+    return true
   }
 
   // Check for specific Elasticsearch error types
-  const errorMeta = error.meta as { body?: { error?: { type?: string } } } | undefined;
+  const errorMeta = error.meta as { body?: { error?: { type?: string } } } | undefined
   if (errorMeta?.body?.error?.type) {
-    const errorType = errorMeta.body.error.type;
+    const errorType = errorMeta.body.error.type
     const retryableESErrors = [
       'es_rejected_execution_exception',
       'cluster_block_exception',
       'unavailable_shards_exception',
       'node_disconnected_exception',
       'node_not_connected_exception'
-    ];
-    return retryableESErrors.includes(errorType);
+    ]
+    return retryableESErrors.includes(errorType)
   }
 
-  return false;
+  return false
 }
 
 /**
@@ -75,9 +75,9 @@ export function isRetryableError(
  * @returns Delay in milliseconds
  */
 export function calculateDelay(attempt: number, config: RetryConfig = {}): number {
-  const mergedConfig = { ...DEFAULT_RETRY_CONFIG, ...config };
-  const delay = mergedConfig.initialDelay * Math.pow(mergedConfig.backoffMultiplier, attempt);
-  return Math.min(delay, mergedConfig.maxDelay);
+  const mergedConfig = { ...DEFAULT_RETRY_CONFIG, ...config }
+  const delay = mergedConfig.initialDelay * Math.pow(mergedConfig.backoffMultiplier, attempt)
+  return Math.min(delay, mergedConfig.maxDelay)
 }
 
 /**
@@ -88,14 +88,14 @@ export function calculateDelay(attempt: number, config: RetryConfig = {}): numbe
  * @throws The last error if all retries are exhausted
  */
 export async function withRetry<T>(operation: () => Promise<T>, config: RetryConfig = {}): Promise<T> {
-  const mergedConfig = { ...DEFAULT_RETRY_CONFIG, ...config };
-  let lastError: Error | undefined;
+  const mergedConfig = { ...DEFAULT_RETRY_CONFIG, ...config }
+  let lastError: Error | undefined
 
   for (let attempt = 0; attempt <= mergedConfig.maxRetries; attempt++) {
     try {
-      return await operation();
+      return await operation()
     } catch (error) {
-      lastError = error as Error;
+      lastError = error as Error
 
       // Don't retry if we've exhausted attempts or error is not retryable
       if (
@@ -105,23 +105,23 @@ export async function withRetry<T>(operation: () => Promise<T>, config: RetryCon
           mergedConfig
         )
       ) {
-        throw error;
+        throw error
       }
 
       // Calculate and apply delay before next attempt
-      const delay = calculateDelay(attempt, mergedConfig);
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      const delay = calculateDelay(attempt, mergedConfig)
+      await new Promise((resolve) => setTimeout(resolve, delay))
 
       // Log retry attempt (could be enhanced with proper logging)
       if (process.env.NODE_ENV !== 'test') {
         console.warn(
           `Retrying operation after ${delay}ms (attempt ${attempt + 1}/${mergedConfig.maxRetries})`
-        );
+        )
       }
     }
   }
 
-  throw lastError!;
+  throw lastError!
 }
 
 /**
@@ -133,11 +133,11 @@ export async function withRetry<T>(operation: () => Promise<T>, config: RetryCon
 export function createRetryWrapper(esClient: Record<string, unknown>, config: RetryConfig = {}) {
   return new Proxy(esClient, {
     get(target, prop) {
-      const original = target[prop as keyof typeof target];
+      const original = target[prop as keyof typeof target]
 
       // Only wrap functions
       if (typeof original !== 'function') {
-        return original;
+        return original
       }
 
       // Return wrapped function with retry logic
@@ -145,8 +145,8 @@ export function createRetryWrapper(esClient: Record<string, unknown>, config: Re
         return withRetry(
           () => (original as (...args: unknown[]) => Promise<unknown>).apply(target, args),
           config
-        );
-      };
+        )
+      }
     }
-  });
+  })
 }

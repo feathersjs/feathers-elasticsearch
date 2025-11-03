@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-import { parseQuery, mapFind } from '../utils/index';
-import { ElasticsearchServiceParams, ElasticAdapterInterface, SearchRequest } from '../types';
+import { parseQuery, mapFind } from '../utils/index'
+import { ElasticsearchServiceParams, ElasticAdapterInterface, SearchRequest } from '../types'
 
 export function find(service: ElasticAdapterInterface, params: ElasticsearchServiceParams) {
-  const { filters, query, paginate } = service.filterQuery(params);
+  const { filters, query, paginate } = service.filterQuery(params)
 
   // Move Elasticsearch-specific operators from filters back to query for parseQuery
   const esOperators = [
@@ -23,18 +23,18 @@ export function find(service: ElasticAdapterInterface, params: ElasticsearchServ
     '$nested',
     '$and',
     '$or'
-  ];
+  ]
 
-  const enhancedQuery = { ...query };
+  const enhancedQuery = { ...query }
   esOperators.forEach((op) => {
     if (filters[op] !== undefined) {
-      enhancedQuery[op] = filters[op];
-      delete filters[op];
+      enhancedQuery[op] = filters[op]
+      delete filters[op]
     }
-  });
+  })
 
   // Parse query with security-enforced max depth
-  let esQuery = parseQuery(enhancedQuery, service.id, service.security.maxQueryDepth);
+  let esQuery = parseQuery(enhancedQuery, service.id, service.security.maxQueryDepth)
 
   const findParams: SearchRequest = {
     index: (filters.$index as string) ?? service.index,
@@ -44,10 +44,10 @@ export function find(service: ElasticAdapterInterface, params: ElasticsearchServ
     routing: filters.$routing as string | undefined,
     query: esQuery ? { bool: esQuery } : undefined,
     ...(service.esParams as Record<string, unknown>)
-  };
+  }
 
   // The `refresh` param is not recognised for search in Es.
-  delete (findParams as Record<string, unknown>).refresh;
+  delete (findParams as Record<string, unknown>).refresh
 
   return service.Model.search(findParams).then((result) =>
     mapFind(
@@ -58,5 +58,5 @@ export function find(service: ElasticAdapterInterface, params: ElasticsearchServ
       filters,
       !!(paginate && paginate.default)
     )
-  );
+  )
 }

@@ -26,7 +26,7 @@ export default [
       '@typescript-eslint': tsPlugin
     },
     rules: {
-      semi: ['error', 'always'],
+      semi: ['error', 'never'],
       '@typescript-eslint/no-explicit-any': 'error',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
@@ -56,7 +56,7 @@ export default [
       }
     },
     rules: {
-      semi: ['error', 'always'],
+      semi: ['error', 'never'],
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
     }
   },

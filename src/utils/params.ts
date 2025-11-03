@@ -1,5 +1,5 @@
-import { ElasticsearchServiceParams } from '../types';
-import { removeProps } from './core';
+import { ElasticsearchServiceParams } from '../types'
+import { removeProps } from './core'
 
 /**
  * Prepares parameters for get operations by removing query and preserving other params
@@ -13,7 +13,7 @@ export function prepareGetParams(
 ): ElasticsearchServiceParams {
   return Object.assign(removeProps(params as Record<string, unknown>, 'query', ...removeFields), {
     query: params.query || {}
-  }) as ElasticsearchServiceParams;
+  }) as ElasticsearchServiceParams
 }
 
 /**
@@ -22,7 +22,7 @@ export function prepareGetParams(
  * @returns Elasticsearch parameters or empty object
  */
 export function getESParams(params: ElasticsearchServiceParams = {}): Record<string, unknown> {
-  return params.elasticsearch || {};
+  return params.elasticsearch || {}
 }
 
 /**
@@ -35,7 +35,7 @@ export function mergeESParams(
   defaultParams: Record<string, unknown> = {},
   requestParams: Record<string, unknown> = {}
 ): Record<string, unknown> {
-  return Object.assign({}, defaultParams, requestParams);
+  return Object.assign({}, defaultParams, requestParams)
 }
 
 /**
@@ -54,7 +54,7 @@ export function prepareRoutingParams(
     return {
       ...params,
       query: Object.assign({}, params.query, { [parent]: routing })
-    };
+    }
   }
-  return params;
+  return params
 }

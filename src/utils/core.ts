@@ -1,5 +1,5 @@
-import { errors } from '@feathersjs/errors';
-import { ValidatorType, DocDescriptor, ElasticAdapterInterface } from '../types';
+import { errors } from '@feathersjs/errors'
+import { ValidatorType, DocDescriptor, ElasticAdapterInterface } from '../types'
 
 /**
  * Gets the type of a value as a string
@@ -7,9 +7,9 @@ import { ValidatorType, DocDescriptor, ElasticAdapterInterface } from '../types'
  * @returns The type as a string
  */
 export function getType(value: unknown): ValidatorType {
-  const type = (Array.isArray(value) && 'array') || (value === null && 'null') || typeof value;
+  const type = (Array.isArray(value) && 'array') || (value === null && 'null') || typeof value
 
-  return (type === 'number' && isNaN(value as number) && 'NaN') || (type as ValidatorType);
+  return (type === 'number' && isNaN(value as number) && 'NaN') || (type as ValidatorType)
 }
 
 /**
@@ -25,19 +25,19 @@ export function validateType(
   name: string,
   validators: ValidatorType | ValidatorType[]
 ): ValidatorType {
-  const type = getType(value);
+  const type = getType(value)
 
   if (typeof validators === 'string') {
-    validators = [validators];
+    validators = [validators]
   }
 
   if (validators.indexOf(type) === -1) {
     throw new errors.BadRequest(
       `Invalid type for '${name}': expected ${validators.join(' or ')}, got '${type}'`
-    );
+    )
   }
 
-  return type;
+  return type
 }
 
 /**
@@ -50,11 +50,11 @@ export function removeProps<T extends Record<string, unknown>>(
   object: T,
   ...props: (keyof T | string)[]
 ): Partial<T> {
-  const result = Object.assign({}, object);
+  const result = Object.assign({}, object)
 
-  props.forEach((prop) => prop !== undefined && delete result[prop as keyof T]);
+  props.forEach((prop) => prop !== undefined && delete result[prop as keyof T])
 
-  return result;
+  return result
 }
 
 /**
@@ -71,16 +71,16 @@ export function getDocDescriptor(
 ): DocDescriptor {
   const mergedData = supplementaryData.reduce((acc, dataObject) => Object.assign(acc, dataObject), {
     ...data
-  });
+  })
 
-  const id = mergedData[service.id] !== undefined ? String(mergedData[service.id]) : undefined;
-  const parent = service.parent && mergedData[service.parent] ? String(mergedData[service.parent]) : undefined;
+  const id = mergedData[service.id] !== undefined ? String(mergedData[service.id]) : undefined
+  const parent = service.parent && mergedData[service.parent] ? String(mergedData[service.parent]) : undefined
   const routing =
-    service.routing && mergedData[service.routing] ? String(mergedData[service.routing]) : parent;
+    service.routing && mergedData[service.routing] ? String(mergedData[service.routing]) : parent
   const join =
     service.join && mergedData[service.join]
       ? (mergedData[service.join] as Record<string, unknown>)
-      : undefined;
+      : undefined
   const doc = removeProps(
     data,
     service.meta || '',
@@ -88,9 +88,9 @@ export function getDocDescriptor(
     service.parent || '',
     service.routing || '',
     service.join || ''
-  );
+  )
 
-  return { id, parent, routing, join, doc: doc as Record<string, unknown> };
+  return { id, parent, routing, join, doc: doc as Record<string, unknown> }
 }
 
 /**
@@ -105,16 +105,16 @@ export function getCompatVersion(
   curVersion: string,
   defVersion: string = '5.0'
 ): string {
-  const curVersionNum = Number(curVersion);
+  const curVersionNum = Number(curVersion)
   const prevVersionsNum = allVersions
     .map((version) => Number(version))
-    .filter((version) => version <= curVersionNum);
+    .filter((version) => version <= curVersionNum)
 
   if (!prevVersionsNum.length) {
-    return defVersion;
+    return defVersion
   }
 
-  return Math.max(...prevVersionsNum).toFixed(1);
+  return Math.max(...prevVersionsNum).toFixed(1)
 }
 
 /**
@@ -124,7 +124,7 @@ export function getCompatVersion(
  * @returns The value for the compatible version
  */
 export function getCompatProp<T>(versionMap: Record<string, T>, curVersion: string): T {
-  return versionMap[getCompatVersion(Object.keys(versionMap), curVersion)];
+  return versionMap[getCompatVersion(Object.keys(versionMap), curVersion)]
 }
 
 /**
@@ -134,5 +134,5 @@ export function getCompatProp<T>(versionMap: Record<string, T>, curVersion: stri
  * @returns Number of query properties
  */
 export function getQueryLength(service: ElasticAdapterInterface, query: Record<string, unknown>): number {
-  return Object.keys(removeProps(query, service.routing || '', service.parent || '')).length;
+  return Object.keys(removeProps(query, service.routing || '', service.parent || '')).length
 }

@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { getCompatProp } = require("../../lib/utils");
+const { expect } = require("chai")
+const { getCompatProp } = require("../../lib/utils")
 
 function find(app, serviceName, esVersion) {
   describe("find()", () => {
@@ -8,9 +8,9 @@ function find(app, serviceName, esVersion) {
         .service(serviceName)
         .find({ query: { id: "better-luck-next-time" } })
         .then((results) => {
-          expect(results).to.be.an("array").and.be.empty;
-        });
-    });
+          expect(results).to.be.an("array").and.be.empty
+        })
+    })
 
     it("should return empty paginated results if no results found", () => {
       return app
@@ -20,10 +20,10 @@ function find(app, serviceName, esVersion) {
           paginate: { default: 10 },
         })
         .then((results) => {
-          expect(results.total).to.equal(0);
-          expect(results.data).to.be.an("array").and.be.empty;
-        });
-    });
+          expect(results.total).to.equal(0)
+          expect(results.data).to.be.an("array").and.be.empty
+        })
+    })
 
     it("should filter results by array parameter", () => {
       return app
@@ -32,10 +32,10 @@ function find(app, serviceName, esVersion) {
           query: { tags: ["legend", "javascript"] },
         })
         .then((results) => {
-          expect(results.length).to.equal(1);
-          expect(results[0].name).to.equal("Douglas");
-        });
-    });
+          expect(results.length).to.equal(1)
+          expect(results[0].name).to.equal("Douglas")
+        })
+    })
 
     describe("special filters", () => {
       it("can $prefix", () => {
@@ -45,10 +45,10 @@ function find(app, serviceName, esVersion) {
             query: { name: { $prefix: "B" } },
           })
           .then((results) => {
-            expect(results.length).to.equal(1);
-            expect(results[0].name).to.equal("Bob");
-          });
-      });
+            expect(results.length).to.equal(1)
+            expect(results[0].name).to.equal("Bob")
+          })
+      })
 
       it("can $wildcard", () => {
         return app
@@ -57,10 +57,10 @@ function find(app, serviceName, esVersion) {
             query: { name: { $wildcard: "B*b" } },
           })
           .then((results) => {
-            expect(results.length).to.equal(1);
-            expect(results[0].name).to.equal("Bob");
-          });
-      });
+            expect(results.length).to.equal(1)
+            expect(results[0].name).to.equal("Bob")
+          })
+      })
 
       it("can $regexp", () => {
         return app
@@ -69,10 +69,10 @@ function find(app, serviceName, esVersion) {
             query: { name: { $regexp: "Bo[xb]" } },
           })
           .then((results) => {
-            expect(results.length).to.equal(1);
-            expect(results[0].name).to.equal("Bob");
-          });
-      });
+            expect(results.length).to.equal(1)
+            expect(results[0].name).to.equal("Bob")
+          })
+      })
 
       it("can $all", () => {
         const expectedLength = getCompatProp(
@@ -81,7 +81,7 @@ function find(app, serviceName, esVersion) {
             "6.0": 6,
           },
           esVersion
-        );
+        )
 
         return app
           .service(serviceName)
@@ -89,9 +89,9 @@ function find(app, serviceName, esVersion) {
             query: { $all: true },
           })
           .then((results) => {
-            expect(results.length).to.equal(expectedLength);
-          });
-      });
+            expect(results.length).to.equal(expectedLength)
+          })
+      })
 
       it("can $match", () => {
         return app
@@ -100,9 +100,9 @@ function find(app, serviceName, esVersion) {
             query: { bio: { $match: "I like JavaScript" } },
           })
           .then((results) => {
-            expect(results.length).to.equal(2);
-          });
-      });
+            expect(results.length).to.equal(2)
+          })
+      })
 
       it("can $phrase", () => {
         return app
@@ -111,10 +111,10 @@ function find(app, serviceName, esVersion) {
             query: { bio: { $phrase: "I like JavaScript" } },
           })
           .then((results) => {
-            expect(results.length).to.equal(1);
-            expect(results[0].name).to.equal("Bob");
-          });
-      });
+            expect(results.length).to.equal(1)
+            expect(results[0].name).to.equal("Bob")
+          })
+      })
 
       it("can $phrase_prefix", () => {
         return app
@@ -123,10 +123,10 @@ function find(app, serviceName, esVersion) {
             query: { bio: { $phrase_prefix: "I like JavaS" } },
           })
           .then((results) => {
-            expect(results.length).to.equal(1);
-            expect(results[0].name).to.equal("Bob");
-          });
-      });
+            expect(results.length).to.equal(1)
+            expect(results[0].name).to.equal("Bob")
+          })
+      })
 
       it("can $or correctly with other filters", () => {
         return app
@@ -138,10 +138,10 @@ function find(app, serviceName, esVersion) {
             },
           })
           .then((results) => {
-            expect(results.length).to.equal(1);
-            expect(results[0].name).to.equal("Douglas");
-          });
-      });
+            expect(results.length).to.equal(1)
+            expect(results[0].name).to.equal("Douglas")
+          })
+      })
 
       it("can $and", () => {
         return app
@@ -153,11 +153,11 @@ function find(app, serviceName, esVersion) {
             },
           })
           .then((results) => {
-            expect(results.length).to.equal(2);
-            expect(results[0].name).to.equal("Bob");
-            expect(results[1].name).to.equal("Douglas");
-          });
-      });
+            expect(results.length).to.equal(2)
+            expect(results[0].name).to.equal("Bob")
+            expect(results[1].name).to.equal("Douglas")
+          })
+      })
 
       it("can $sqs (simple_query_string)", () => {
         return app
@@ -173,10 +173,10 @@ function find(app, serviceName, esVersion) {
             },
           })
           .then((results) => {
-            expect(results.length).to.equal(1);
-            expect(results[0].name).to.equal("Moody");
-          });
-      });
+            expect(results.length).to.equal(1)
+            expect(results[0].name).to.equal("Moody")
+          })
+      })
 
       it("can $sqs (simple_query_string) with other filters", () => {
         return app
@@ -192,16 +192,16 @@ function find(app, serviceName, esVersion) {
             },
           })
           .then((results) => {
-            expect(results.length).to.equal(1);
-            expect(results[0].name).to.equal("Bob");
-          });
-      });
+            expect(results.length).to.equal(1)
+            expect(results[0].name).to.equal("Bob")
+          })
+      })
 
       it("can $child", () => {
         const types = {
           "5.0": "aka",
           "6.0": "alias",
-        };
+        }
 
         return app
           .service(serviceName)
@@ -215,17 +215,17 @@ function find(app, serviceName, esVersion) {
             },
           })
           .then((results) => {
-            expect(results.length).to.equal(2);
-            expect(results[0].name).to.equal("Douglas");
-            expect(results[1].name).to.equal("Moody");
-          });
-      });
+            expect(results.length).to.equal(2)
+            expect(results[0].name).to.equal("Douglas")
+            expect(results[1].name).to.equal("Moody")
+          })
+      })
 
       it("can $parent", () => {
         const types = {
           "5.0": "people",
           "6.0": "real",
-        };
+        }
 
         return app
           .service("aka")
@@ -239,11 +239,11 @@ function find(app, serviceName, esVersion) {
             },
           })
           .then((results) => {
-            expect(results.length).to.equal(2);
-            expect(results[0].name).to.equal("Teacher");
-            expect(results[1].name).to.equal("The Master");
-          });
-      });
+            expect(results.length).to.equal(2)
+            expect(results[0].name).to.equal("Teacher")
+            expect(results[1].name).to.equal("The Master")
+          })
+      })
 
       it("can $nested", () => {
         return app
@@ -257,10 +257,10 @@ function find(app, serviceName, esVersion) {
             },
           })
           .then((results) => {
-            expect(results.length).to.equal(1);
-            expect(results[0].name).to.equal("Bob");
-          });
-      });
+            expect(results.length).to.equal(1)
+            expect(results[0].name).to.equal("Bob")
+          })
+      })
 
       it("can $exists", () => {
         return app
@@ -271,10 +271,10 @@ function find(app, serviceName, esVersion) {
             },
           })
           .then((results) => {
-            expect(results.length).to.equal(1);
-            expect(results[0].name).to.equal("Douglas");
-          });
-      });
+            expect(results.length).to.equal(1)
+            expect(results[0].name).to.equal("Douglas")
+          })
+      })
 
       it("can $missing", () => {
         const expectedLength = getCompatProp(
@@ -283,7 +283,7 @@ function find(app, serviceName, esVersion) {
             "6.0": 5,
           },
           esVersion
-        );
+        )
 
         return app
           .service(serviceName)
@@ -294,13 +294,13 @@ function find(app, serviceName, esVersion) {
             },
           })
           .then((results) => {
-            expect(results.length).to.equal(expectedLength);
-            expect(results[0].name).to.equal("Bob");
-            expect(results[1].name).to.equal("Moody");
-          });
-      });
-    });
-  });
+            expect(results.length).to.equal(expectedLength)
+            expect(results[0].name).to.equal("Bob")
+            expect(results[1].name).to.equal("Moody")
+          })
+      })
+    })
+  })
 }
 
-module.exports = find;
+module.exports = find

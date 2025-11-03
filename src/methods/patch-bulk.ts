@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-import { mapBulk, removeProps, getDocDescriptor } from '../utils/index';
-import { ElasticsearchServiceParams, ElasticAdapterInterface } from '../types';
-import { errors } from '@feathersjs/errors';
+import { mapBulk, removeProps, getDocDescriptor } from '../utils/index'
+import { ElasticsearchServiceParams, ElasticAdapterInterface } from '../types'
+import { errors } from '@feathersjs/errors'
 
 /**
  * Prepares find parameters for bulk patch operation
@@ -10,7 +10,7 @@ import { errors } from '@feathersjs/errors';
 function prepareFindParams(_service: ElasticAdapterInterface, params: ElasticsearchServiceParams) {
   return Object.assign(removeProps(params as Record<string, unknown>, 'query'), {
     query: Object.assign({}, params.query, { $select: false })
-  });
+  })
 }
 
 /**
@@ -23,26 +23,26 @@ function createBulkOperations(
   index: string | undefined
 ): Array<Record<string, unknown>> {
   return found.reduce((result: Array<Record<string, unknown>>, item: Record<string, unknown>) => {
-    const metaData = (item as Record<string, Record<string, unknown>>)[service.meta as string];
-    const { _id, _parent: parent, _routing: routing } = metaData;
-    const { doc } = getDocDescriptor(service, data);
+    const metaData = (item as Record<string, Record<string, unknown>>)[service.meta as string]
+    const { _id, _parent: parent, _routing: routing } = metaData
+    const { doc } = getDocDescriptor(service, data)
 
     const updateOp: Record<string, Record<string, unknown>> = {
       update: {
         _index: index as string,
         _id
       }
-    };
-
-    if (routing || parent) {
-      updateOp.update.routing = routing || parent;
     }
 
-    result.push(updateOp);
-    result.push({ doc, doc_as_upsert: false });
+    if (routing || parent) {
+      updateOp.update.routing = routing || parent
+    }
 
-    return result;
-  }, []);
+    result.push(updateOp)
+    result.push({ doc, doc_as_upsert: false })
+
+    return result
+  }, [])
 }
 
 /**
@@ -59,13 +59,13 @@ function prepareBulkUpdateParams(
       body: operations
     },
     service.esParams
-  );
+  )
 
   // Remove refresh from bulk params but return it separately
-  const needsRefresh = params.refresh as boolean;
-  delete params.refresh;
+  const needsRefresh = params.refresh as boolean
+  delete params.refresh
 
-  return { params, needsRefresh };
+  return { params, needsRefresh }
 }
 
 /**
@@ -78,9 +78,9 @@ async function handleRefresh(
   index: string
 ): Promise<unknown> {
   if (needsRefresh) {
-    await service.Model.indices.refresh({ index });
+    await service.Model.indices.refresh({ index })
   }
-  return bulkResult;
+  return bulkResult
 }
 
 /**
@@ -89,10 +89,10 @@ async function handleRefresh(
 function getUpdatedIds(bulkResult: Record<string, unknown>): string[] {
   return (bulkResult.items as Array<Record<string, unknown>>)
     .filter((item: Record<string, unknown>) => {
-      const update = item.update as Record<string, unknown>;
-      return update && (update.result === 'updated' || update.result === 'noop');
+      const update = item.update as Record<string, unknown>
+      return update && (update.result === 'updated' || update.result === 'noop')
     })
-    .map((item: Record<string, unknown>) => (item.update as Record<string, unknown>)._id as string);
+    .map((item: Record<string, unknown>) => (item.update as Record<string, unknown>)._id as string)
 }
 
 /**
@@ -109,14 +109,14 @@ async function fetchUpdatedDocuments(
     body: {
       ids: updatedIds
     }
-  };
+  }
 
   // Only add _source if $select is explicitly set
   if (filters.$select) {
-    getParams._source = filters.$select;
+    getParams._source = filters.$select
   }
 
-  return service.Model.mget(getParams);
+  return service.Model.mget(getParams)
 }
 
 /**
@@ -131,27 +131,27 @@ function mapFetchedDocuments(
   const docMap: Record<string, unknown> = {}
   ;(mgetResult.docs as Array<Record<string, unknown>>).forEach((doc: Record<string, unknown>) => {
     if (doc.found) {
-      docMap[doc._id as string] = doc._source;
+      docMap[doc._id as string] = doc._source
     }
-  });
+  })
 
   // Merge the selected fields with the bulk results
   return (bulkResult.items as Array<Record<string, unknown>>).map((item: Record<string, unknown>) => {
-    const update = item.update as Record<string, unknown>;
+    const update = item.update as Record<string, unknown>
     if (update && docMap[update._id as string]) {
-      const doc = docMap[update._id as string] as Record<string, unknown>;
+      const doc = docMap[update._id as string] as Record<string, unknown>
       // Add the id field
-      doc[service.id] = update._id;
+      doc[service.id] = update._id
       // Add metadata
       doc[service.meta as string] = {
         _id: update._id,
         _index: update._index,
         status: update.status || 200
-      };
-      return doc;
+      }
+      return doc
     }
-    return mapBulk([item], service.id, service.meta, service.join)[0];
-  });
+    return mapBulk([item], service.id, service.meta, service.join)[0]
+  })
 }
 
 /**
@@ -166,54 +166,54 @@ export async function patchBulk(
   data: Record<string, unknown>,
   params: ElasticsearchServiceParams
 ): Promise<unknown> {
-  const { filters } = service.filterQuery(params);
-  const index = (filters.$index as string) || service.index;
+  const { filters } = service.filterQuery(params)
+  const index = (filters.$index as string) || service.index
 
   // Step 1: Find documents to patch
-  const findParams = prepareFindParams(service, params);
-  const results = await service._find(findParams);
+  const findParams = prepareFindParams(service, params)
+  const results = await service._find(findParams)
 
   // Handle paginated results
   const found = Array.isArray(results)
     ? results
-    : ((results as Record<string, unknown>).data as Array<Record<string, unknown>>);
+    : ((results as Record<string, unknown>).data as Array<Record<string, unknown>>)
 
   if (!found.length) {
-    return found;
+    return found
   }
 
   // SECURITY: Enforce maximum bulk operation limit
-  const maxBulkOps = service.security.maxBulkOperations;
+  const maxBulkOps = service.security.maxBulkOperations
   if (found.length > maxBulkOps) {
     throw new errors.BadRequest(
       `Bulk operation would affect ${found.length} documents, maximum allowed is ${maxBulkOps}`
-    );
+    )
   }
 
   // Step 2: Create bulk operations
-  const operations = createBulkOperations(service, found, data, index);
+  const operations = createBulkOperations(service, found, data, index)
 
   // Step 3: Prepare and execute bulk update
-  const { params: bulkUpdateParams, needsRefresh } = prepareBulkUpdateParams(service, operations, index);
+  const { params: bulkUpdateParams, needsRefresh } = prepareBulkUpdateParams(service, operations, index)
 
-  let bulkResult = (await service.Model.bulk(bulkUpdateParams as never)) as unknown as Record<string, unknown>;
+  let bulkResult = (await service.Model.bulk(bulkUpdateParams as never)) as unknown as Record<string, unknown>
 
   // Step 4: Handle refresh if needed
-  bulkResult = (await handleRefresh(service, bulkResult, needsRefresh, index)) as Record<string, unknown>;
+  bulkResult = (await handleRefresh(service, bulkResult, needsRefresh, index)) as Record<string, unknown>
 
   // Step 5: Get updated document IDs
-  const updatedIds = getUpdatedIds(bulkResult);
+  const updatedIds = getUpdatedIds(bulkResult)
 
   if (updatedIds.length === 0) {
-    return mapBulk(bulkResult.items as Array<Record<string, unknown>>, service.id, service.meta, service.join);
+    return mapBulk(bulkResult.items as Array<Record<string, unknown>>, service.id, service.meta, service.join)
   }
 
   // Step 6: Fetch updated documents with selected fields
   const mgetResult = (await fetchUpdatedDocuments(service, updatedIds, index, filters)) as Record<
     string,
     unknown
-  >;
+  >
 
   // Step 7: Map and return results
-  return mapFetchedDocuments(mgetResult, bulkResult, service);
+  return mapFetchedDocuments(mgetResult, bulkResult, service)
 }

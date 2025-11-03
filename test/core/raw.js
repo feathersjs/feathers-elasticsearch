@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { getCompatProp } = require("../../lib/utils");
+const { expect } = require("chai")
+const { getCompatProp } = require("../../lib/utils")
 
 function raw(app, serviceName, esVersion) {
   describe("raw()", () => {
@@ -17,9 +17,9 @@ function raw(app, serviceName, esVersion) {
           },
         })
         .then((results) => {
-          expect(results.hits.hits.length).to.equal(1);
-        });
-    });
+          expect(results.hits.hits.length).to.equal(1)
+        })
+    })
 
     it("should search documents in index with syntax match", () => {
       return app
@@ -35,16 +35,16 @@ function raw(app, serviceName, esVersion) {
           },
         })
         .then((results) => {
-          expect(results.hits.hits.length).to.equal(1);
-        });
-    });
+          expect(results.hits.hits.length).to.equal(1)
+        })
+    })
 
     it("should show the mapping of index test", () => {
       const mappings = {
         "5.0": ["test.mappings.aka._parent.type", "people"],
         "6.0": ["test-people.mappings.doc.properties.aka.type", "join"],
         "7.0": ["test-people.mappings.properties.aka.type", "join"],
-      };
+      }
 
       return app
         .service("aka")
@@ -52,27 +52,27 @@ function raw(app, serviceName, esVersion) {
         .then((results) => {
           expect(results).to.have.nested.property(
             ...getCompatProp(mappings, esVersion)
-          );
-        });
-    });
+          )
+        })
+    })
 
     it("should return a promise when the passed in method is not defined", () => {
       app
         .service(serviceName)
         .raw(undefined, {})
         .catch((err) => {
-          expect(err.message === "params.method must be defined.");
-        });
-    });
+          expect(err.message === "params.method must be defined.")
+        })
+    })
 
     it("should return a promise when service.method is not a function", () => {
       app
         .service(serviceName)
         .raw("notafunction", {})
         .catch((err) => {
-          expect(err.message === "There is no query method notafunction.");
-        });
-    });
+          expect(err.message === "There is no query method notafunction.")
+        })
+    })
 
     it("should return a promise when service.method.extention is not a function", () => {
       app
@@ -81,10 +81,10 @@ function raw(app, serviceName, esVersion) {
         .catch((err) => {
           expect(
             err.message === "There is no query method indices.notafunction."
-          );
-        });
-    });
-  });
+          )
+        })
+    })
+  })
 }
 
-module.exports = raw;
+module.exports = raw

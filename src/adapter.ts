@@ -1,18 +1,18 @@
 // import { _ } from "@feathersjs/commons";
-import { AdapterBase, filterQuery } from '@feathersjs/adapter-commons';
-import { Client } from '@elastic/elasticsearch';
+import { AdapterBase, filterQuery } from '@feathersjs/adapter-commons'
+import { Client } from '@elastic/elasticsearch'
 import {
   ElasticsearchServiceOptions,
   ElasticsearchServiceParams,
   ElasticAdapterInterface,
   SecurityConfig
-} from './types';
-import { errorHandler } from './error-handler';
-import { DEFAULT_SECURITY_CONFIG } from './utils/security';
+} from './types'
+import { errorHandler } from './error-handler'
+import { DEFAULT_SECURITY_CONFIG } from './utils/security'
 // const errors = require('@feathersjs/errors');
 // const debug = makeDebug('feathers-elasticsearch');
 
-import * as methods from './methods/index';
+import * as methods from './methods/index'
 
 /**
  * Elasticsearch adapter for FeathersJS
@@ -22,16 +22,16 @@ import * as methods from './methods/index';
  * @extends {AdapterBase}
  */
 export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterface {
-  Model!: Client;
-  index!: string;
-  parent?: string;
-  routing?: string;
-  join?: string;
-  meta!: string;
-  esVersion?: string;
-  esParams?: Record<string, unknown>;
-  security!: Required<SecurityConfig>;
-  core: Record<string, unknown>;
+  Model!: Client
+  index!: string
+  parent?: string
+  routing?: string
+  join?: string
+  meta!: string
+  esVersion?: string
+  esParams?: Record<string, unknown>
+  security!: Required<SecurityConfig>
+  core: Record<string, unknown>
 
   /**
    * Creates an instance of ElasticAdapter
@@ -40,16 +40,16 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
    */
   constructor(options: ElasticsearchServiceOptions) {
     if (typeof options !== 'object') {
-      throw new Error('Elasticsearch options have to be provided');
+      throw new Error('Elasticsearch options have to be provided')
     }
 
     if (!options || !options.Model) {
-      throw new Error('Elasticsearch `Model` (client) needs to be provided');
+      throw new Error('Elasticsearch `Model` (client) needs to be provided')
     }
 
-    const index = options.index || options.elasticsearch?.index;
+    const index = options.index || options.elasticsearch?.index
     if (!index) {
-      throw new Error('Elasticsearch `index` needs to be provided');
+      throw new Error('Elasticsearch `index` needs to be provided')
     }
 
     super({
@@ -114,28 +114,28 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
     ;['Model', 'index', 'parent', 'meta', 'join', 'esVersion', 'esParams'].forEach((name) =>
       Object.defineProperty(this, name, {
         get() {
-          return this.options[name];
+          return this.options[name]
         }
       })
-    );
+    )
 
     // Initialize security configuration with defaults
     this.security = {
       ...DEFAULT_SECURITY_CONFIG,
       ...options.security
-    };
+    }
 
     // BREAKING CHANGE: Disable $index filter by default for security
     // Users must explicitly enable it via security.allowedIndices
     if (this.security.allowedIndices.length === 0 && this.options.filters?.$index) {
-      delete this.options.filters.$index;
+      delete this.options.filters.$index
     }
 
     // Set up core methods reference
     this.core = {
       find: methods.find,
       get: methods.get
-    };
+    }
   }
 
   /**
@@ -144,20 +144,20 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
    * @returns {Object} Filtered query parameters with pagination settings
    */
   filterQuery(params: ElasticsearchServiceParams = {}) {
-    const options = this.getOptions(params);
-    const { filters, query } = filterQuery(params?.query || {}, options);
+    const options = this.getOptions(params)
+    const { filters, query } = filterQuery(params?.query || {}, options)
 
     if (!filters.$skip || isNaN(filters.$skip as number)) {
-      filters.$skip = 0;
+      filters.$skip = 0
     }
 
     if (typeof filters.$sort === 'object') {
       filters.$sort = Object.entries(filters.$sort).map(([key, val]) => ({
         [key]: (val as number) > 0 ? 'asc' : 'desc'
-      }));
+      }))
     }
 
-    return { filters, query, paginate: options.paginate };
+    return { filters, query, paginate: options.paginate }
   }
 
   /**
@@ -173,11 +173,11 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
     | { total: number; skip: number; limit: number; data: Record<string, unknown>[] }
   > {
     return methods.find(this, params).catch((error: Error) => {
-      throw errorHandler(error, undefined);
+      throw errorHandler(error, undefined)
     }) as Promise<
       | Record<string, unknown>[]
       | { total: number; skip: number; limit: number; data: Record<string, unknown>[] }
-    >;
+    >
   }
 
   /**
@@ -189,8 +189,8 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
    */
   _get(id: string | number, params: ElasticsearchServiceParams = {}): Promise<Record<string, unknown>> {
     return (methods.get(this, id, params) as Promise<Record<string, unknown>>).catch((error: Error) => {
-      throw errorHandler(error, id);
-    });
+      throw errorHandler(error, id)
+    })
   }
 
   /**
@@ -208,13 +208,13 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
     // Check if we are creating single item.
     if (!Array.isArray(data)) {
       return methods.create(this, data, params).catch((error: Error) => {
-        throw errorHandler(error, (data as Record<string, unknown>)[this.id] as string | number);
-      }) as Promise<Record<string, unknown>>;
+        throw errorHandler(error, (data as Record<string, unknown>)[this.id] as string | number)
+      }) as Promise<Record<string, unknown>>
     }
 
     return methods.createBulk(this, data, params).catch((error: Error) => {
-      throw errorHandler(error);
-    }) as Promise<Record<string, unknown>[]>;
+      throw errorHandler(error)
+    }) as Promise<Record<string, unknown>[]>
   }
 
   /**
@@ -227,8 +227,8 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
    */
   _update(id: string | number, data: Record<string, unknown>, params: ElasticsearchServiceParams = {}) {
     return methods.update(this, id, data, params).catch((error: Error) => {
-      throw errorHandler(error, id);
-    });
+      throw errorHandler(error, id)
+    })
   }
 
   /**
@@ -247,13 +247,13 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
     // Check if we are patching single item.
     if (id !== null) {
       return methods.patch(this, id, data, params).catch((error: Error) => {
-        throw errorHandler(error, id);
-      }) as Promise<Record<string, unknown>>;
+        throw errorHandler(error, id)
+      }) as Promise<Record<string, unknown>>
     }
 
     return methods.patchBulk(this, data, params).catch((error: Error) => {
-      throw errorHandler(error);
-    }) as Promise<Record<string, unknown>[]>;
+      throw errorHandler(error)
+    }) as Promise<Record<string, unknown>[]>
   }
 
   /**
@@ -266,13 +266,13 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
   _remove(id: string | number | null, params: ElasticsearchServiceParams = {}) {
     if (id !== null) {
       return methods.remove(this, id, params).catch((error: Error) => {
-        throw errorHandler(error, id);
-      });
+        throw errorHandler(error, id)
+      })
     }
 
     return methods.removeBulk(this, params).catch((error: Error) => {
-      throw errorHandler(error);
-    });
+      throw errorHandler(error)
+    })
   }
 
   /**
@@ -283,7 +283,7 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
    */
   _raw(method: string, params: ElasticsearchServiceParams = {}) {
     return methods.raw(this, method, params).catch((error: Error) => {
-      throw errorHandler(error);
-    });
+      throw errorHandler(error)
+    })
   }
 }

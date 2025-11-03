@@ -1,5 +1,5 @@
-import { errors as feathersErrors } from '@feathersjs/errors';
-import { ElasticsearchServiceParams } from '../types';
+import { errors as feathersErrors } from '@feathersjs/errors'
+import { ElasticsearchServiceParams } from '../types'
 
 /**
  * Validation schema for different operations
@@ -26,30 +26,30 @@ export interface ValidationSchema {
  * @returns Validation errors or null if valid
  */
 export function validate(value: unknown, schema: ValidationSchema, path: string = 'data'): string[] | null {
-  const errors: string[] = [];
+  const errors: string[] = []
 
   // Check type
   if (schema.type) {
-    const actualType = Array.isArray(value) ? 'array' : typeof value;
+    const actualType = Array.isArray(value) ? 'array' : typeof value
     if (actualType !== schema.type) {
-      errors.push(`${path} must be of type ${schema.type}, got ${actualType}`);
-      return errors; // Stop validation if type is wrong
+      errors.push(`${path} must be of type ${schema.type}, got ${actualType}`)
+      return errors // Stop validation if type is wrong
     }
   }
 
   // Check enum values
   if (schema.enum && !schema.enum.includes(value)) {
-    errors.push(`${path} must be one of: ${schema.enum.join(', ')}`);
+    errors.push(`${path} must be one of: ${schema.enum.join(', ')}`)
   }
 
   // Object validation
   if (schema.type === 'object' && value && schema.properties) {
-    const valueObj = value as Record<string, unknown>;
+    const valueObj = value as Record<string, unknown>
     // Check required fields
     if (schema.required) {
       for (const field of schema.required) {
         if (!(field in valueObj) || valueObj[field] === undefined) {
-          errors.push(`${path}.${field} is required`);
+          errors.push(`${path}.${field} is required`)
         }
       }
     }
@@ -57,9 +57,9 @@ export function validate(value: unknown, schema: ValidationSchema, path: string 
     // Validate properties
     for (const [key, propSchema] of Object.entries(schema.properties)) {
       if (key in valueObj) {
-        const propErrors = validate(valueObj[key], propSchema, `${path}.${key}`);
+        const propErrors = validate(valueObj[key], propSchema, `${path}.${key}`)
         if (propErrors) {
-          errors.push(...propErrors);
+          errors.push(...propErrors)
         }
       }
     }
@@ -68,55 +68,55 @@ export function validate(value: unknown, schema: ValidationSchema, path: string 
   // Array validation
   if (schema.type === 'array' && Array.isArray(value)) {
     if (schema.minLength !== undefined && value.length < schema.minLength) {
-      errors.push(`${path} must have at least ${schema.minLength} items`);
+      errors.push(`${path} must have at least ${schema.minLength} items`)
     }
     if (schema.maxLength !== undefined && value.length > schema.maxLength) {
-      errors.push(`${path} must have at most ${schema.maxLength} items`);
+      errors.push(`${path} must have at most ${schema.maxLength} items`)
     }
 
     // Validate items
     if (schema.items) {
       value.forEach((item, index) => {
-        const itemErrors = validate(item, schema.items!, `${path}[${index}]`);
+        const itemErrors = validate(item, schema.items!, `${path}[${index}]`)
         if (itemErrors) {
-          errors.push(...itemErrors);
+          errors.push(...itemErrors)
         }
-      });
+      })
     }
   }
 
   // String validation
   if (schema.type === 'string' && typeof value === 'string') {
     if (schema.minLength !== undefined && value.length < schema.minLength) {
-      errors.push(`${path} must be at least ${schema.minLength} characters`);
+      errors.push(`${path} must be at least ${schema.minLength} characters`)
     }
     if (schema.maxLength !== undefined && value.length > schema.maxLength) {
-      errors.push(`${path} must be at most ${schema.maxLength} characters`);
+      errors.push(`${path} must be at most ${schema.maxLength} characters`)
     }
     if (schema.pattern && !schema.pattern.test(value)) {
-      errors.push(`${path} does not match required pattern`);
+      errors.push(`${path} does not match required pattern`)
     }
   }
 
   // Number validation
   if (schema.type === 'number' && typeof value === 'number') {
     if (schema.min !== undefined && value < schema.min) {
-      errors.push(`${path} must be at least ${schema.min}`);
+      errors.push(`${path} must be at least ${schema.min}`)
     }
     if (schema.max !== undefined && value > schema.max) {
-      errors.push(`${path} must be at most ${schema.max}`);
+      errors.push(`${path} must be at most ${schema.max}`)
     }
   }
 
   // Custom validation
   if (schema.custom) {
-    const result = schema.custom(value);
+    const result = schema.custom(value)
     if (result !== true) {
-      errors.push(typeof result === 'string' ? result : `${path} failed custom validation`);
+      errors.push(typeof result === 'string' ? result : `${path} failed custom validation`)
     }
   }
 
-  return errors.length > 0 ? errors : null;
+  return errors.length > 0 ? errors : null
 }
 
 /**
@@ -132,9 +132,9 @@ export const schemas = {
       required: [],
       custom: (value: unknown) => {
         if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
-          return 'Document cannot be empty';
+          return 'Document cannot be empty'
         }
-        return true;
+        return true
       }
     },
     bulk: {
@@ -144,9 +144,9 @@ export const schemas = {
         type: 'object' as const,
         custom: (value: unknown) => {
           if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
-            return 'Document cannot be empty';
+            return 'Document cannot be empty'
           }
-          return true;
+          return true
         }
       }
     }
@@ -160,9 +160,9 @@ export const schemas = {
     required: [],
     custom: (value: unknown) => {
       if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
-        return 'Update data cannot be empty';
+        return 'Update data cannot be empty'
       }
-      return true;
+      return true
     }
   },
 
@@ -173,9 +173,9 @@ export const schemas = {
     type: 'object' as const,
     custom: (value: unknown) => {
       if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
-        return 'Patch data cannot be empty';
+        return 'Patch data cannot be empty'
       }
-      return true;
+      return true
     }
   },
 
@@ -185,18 +185,18 @@ export const schemas = {
   id: {
     custom: (value: unknown) => {
       if (value === null || value === undefined) {
-        return 'ID cannot be null or undefined';
+        return 'ID cannot be null or undefined'
       }
       if (typeof value !== 'string' && typeof value !== 'number') {
-        return 'ID must be a string or number';
+        return 'ID must be a string or number'
       }
       if (value === '') {
-        return 'ID cannot be empty';
+        return 'ID cannot be empty'
       }
-      return true;
+      return true
     }
   }
-};
+}
 
 /**
  * Validates create operation data
@@ -204,11 +204,11 @@ export const schemas = {
  * @throws {BadRequest} If validation fails
  */
 export function validateCreate(data: unknown): void {
-  const schema = Array.isArray(data) ? schemas.create.bulk : schemas.create.single;
-  const errors = validate(data, schema);
+  const schema = Array.isArray(data) ? schemas.create.bulk : schemas.create.single
+  const errors = validate(data, schema)
 
   if (errors) {
-    throw new feathersErrors.BadRequest('Validation failed', { errors });
+    throw new feathersErrors.BadRequest('Validation failed', { errors })
   }
 }
 
@@ -219,13 +219,13 @@ export function validateCreate(data: unknown): void {
  * @throws {BadRequest} If validation fails
  */
 export function validateUpdate(id: unknown, data: unknown): void {
-  const idErrors = validate(id, schemas.id, 'id');
-  const dataErrors = validate(data, schemas.update);
+  const idErrors = validate(id, schemas.id, 'id')
+  const dataErrors = validate(data, schemas.update)
 
-  const allErrors = [...(idErrors || []), ...(dataErrors || [])];
+  const allErrors = [...(idErrors || []), ...(dataErrors || [])]
 
   if (allErrors.length > 0) {
-    throw new feathersErrors.BadRequest('Validation failed', { errors: allErrors });
+    throw new feathersErrors.BadRequest('Validation failed', { errors: allErrors })
   }
 }
 
@@ -236,24 +236,24 @@ export function validateUpdate(id: unknown, data: unknown): void {
  * @throws {BadRequest} If validation fails
  */
 export function validatePatch(id: unknown, data: unknown): void {
-  const errors: string[] = [];
+  const errors: string[] = []
 
   // For single patch, validate ID
   if (id !== null) {
-    const idErrors = validate(id, schemas.id, 'id');
+    const idErrors = validate(id, schemas.id, 'id')
     if (idErrors) {
-      errors.push(...idErrors);
+      errors.push(...idErrors)
     }
   }
 
   // Validate patch data
-  const dataErrors = validate(data, schemas.patch);
+  const dataErrors = validate(data, schemas.patch)
   if (dataErrors) {
-    errors.push(...dataErrors);
+    errors.push(...dataErrors)
   }
 
   if (errors.length > 0) {
-    throw new feathersErrors.BadRequest('Validation failed', { errors });
+    throw new feathersErrors.BadRequest('Validation failed', { errors })
   }
 }
 
@@ -264,9 +264,9 @@ export function validatePatch(id: unknown, data: unknown): void {
  */
 export function validateRemove(id: unknown): void {
   if (id !== null) {
-    const errors = validate(id, schemas.id, 'id');
+    const errors = validate(id, schemas.id, 'id')
     if (errors) {
-      throw new feathersErrors.BadRequest('Validation failed', { errors });
+      throw new feathersErrors.BadRequest('Validation failed', { errors })
     }
   }
 }
@@ -313,27 +313,27 @@ export function validateQueryParams(params: ElasticsearchServiceParams): void {
           '$skip',
           '$index'
         ].includes(key)
-      );
-    });
+      )
+    })
 
     if (invalidOperators.length > 0) {
-      throw new feathersErrors.BadRequest(`Invalid query operators: ${invalidOperators.join(', ')}`);
+      throw new feathersErrors.BadRequest(`Invalid query operators: ${invalidOperators.join(', ')}`)
     }
   }
 
   // Validate pagination parameters
   if (params.paginate !== false) {
     if (params.query?.$limit !== undefined) {
-      const limit = params.query.$limit;
+      const limit = params.query.$limit
       if (typeof limit !== 'number' || limit < 0) {
-        throw new feathersErrors.BadRequest('$limit must be a positive number');
+        throw new feathersErrors.BadRequest('$limit must be a positive number')
       }
     }
 
     if (params.query?.$skip !== undefined) {
-      const skip = params.query.$skip;
+      const skip = params.query.$skip
       if (typeof skip !== 'number' || skip < 0) {
-        throw new feathersErrors.BadRequest('$skip must be a positive number');
+        throw new feathersErrors.BadRequest('$skip must be a positive number')
       }
     }
   }

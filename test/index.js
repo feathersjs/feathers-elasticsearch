@@ -1,20 +1,20 @@
-const { expect } = require('chai');
-const adapterTests = require('@feathersjs/adapter-tests');
+const { expect } = require('chai')
+const adapterTests = require('@feathersjs/adapter-tests')
 
-const feathers = require('@feathersjs/feathers');
-const errors = require('@feathersjs/errors');
-const service = require('../lib');
-const db = require('../test-utils/test-db');
-const coreTests = require('./core');
-const { getCompatProp } = require('../lib/utils/core');
+const feathers = require('@feathersjs/feathers')
+const errors = require('@feathersjs/errors')
+const service = require('../lib')
+const db = require('../test-utils/test-db')
+const coreTests = require('./core')
+const { getCompatProp } = require('../lib/utils/core')
 
 describe('Elasticsearch Service', () => {
-  const app = feathers();
-  const serviceName = 'people';
-  const esVersion = db.getApiVersion();
+  const app = feathers()
+  const serviceName = 'people'
+  const esVersion = db.getApiVersion()
 
   before(async () => {
-    await db.resetSchema();
+    await db.resetSchema()
     app.use(
       `/${serviceName}`,
       service({
@@ -28,7 +28,7 @@ describe('Elasticsearch Service', () => {
           allowedRawMethods: ['search', 'indices.getMapping']
         }
       })
-    );
+    )
     app.use(
       '/aka',
       service({
@@ -43,37 +43,37 @@ describe('Elasticsearch Service', () => {
           allowedRawMethods: ['search', 'indices.getMapping']
         }
       })
-    );
-  });
+    )
+  })
 
   after(async () => {
-    await db.deleteSchema();
-  });
+    await db.deleteSchema()
+  })
 
   it('is CommonJS compatible', () => {
-    expect(typeof require('../lib')).to.equal('function');
-  });
+    expect(typeof require('../lib')).to.equal('function')
+  })
 
   describe('Initialization', () => {
     it('throws an error when missing options', () => {
-      expect(service.bind(null)).to.throw('Elasticsearch options have to be provided');
-    });
+      expect(service.bind(null)).to.throw('Elasticsearch options have to be provided')
+    })
 
     it('throws an error when missing `options.Model`', () => {
-      expect(service.bind(null, {})).to.throw('Elasticsearch `Model` (client) needs to be provided');
-    });
-  });
+      expect(service.bind(null, {})).to.throw('Elasticsearch `Model` (client) needs to be provided')
+    })
+  })
 
-  adapterTests(app, errors, 'people', 'id');
+  adapterTests(app, errors, 'people', 'id')
 
   describe('Specific Elasticsearch tests', () => {
     before(async () => {
-      const service = app.service(serviceName);
+      const service = app.service(serviceName)
 
-      service.options.multi = true;
-      app.service('aka').options.multi = true;
+      service.options.multi = true
+      app.service('aka').options.multi = true
 
-      await service.remove(null, { query: { $limit: 1000 } });
+      await service.remove(null, { query: { $limit: 1000 } })
       await service.create([
         {
           id: 'bob',
@@ -100,7 +100,7 @@ describe('Elasticsearch Service', () => {
           phone: '0123455567',
           aka: 'real'
         }
-      ]);
+      ])
 
       await app.service('aka').create([
         {
@@ -111,19 +111,19 @@ describe('Elasticsearch Service', () => {
         },
         { name: 'Teacher', parent: 'douglas', aka: 'alias' },
         { name: 'Teacher', parent: 'moody', aka: 'alias' }
-      ]);
-    });
+      ])
+    })
 
     after(async () => {
-      await app.service(serviceName).remove(null, { query: { $limit: 1000 } });
-    });
+      await app.service(serviceName).remove(null, { query: { $limit: 1000 } })
+    })
 
-    coreTests.find(app, serviceName, esVersion);
-    coreTests.get(app, serviceName);
-    coreTests.create(app, serviceName);
-    coreTests.patch(app, serviceName, esVersion);
-    coreTests.remove(app, serviceName);
-    coreTests.update(app, serviceName);
-    coreTests.raw(app, serviceName, esVersion);
-  });
-});
+    coreTests.find(app, serviceName, esVersion)
+    coreTests.get(app, serviceName)
+    coreTests.create(app, serviceName)
+    coreTests.patch(app, serviceName, esVersion)
+    coreTests.remove(app, serviceName)
+    coreTests.update(app, serviceName)
+    coreTests.raw(app, serviceName, esVersion)
+  })
+})
