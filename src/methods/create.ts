@@ -19,9 +19,9 @@ function getCreateParams(service: ElasticAdapterInterface, docDescriptor: DocDes
   }
 
   // Build params with required fields
-  const params: any = {
-    index: service.index,
-    body: doc
+  const params: IndexRequest = {
+    index: service.index || '',
+    document: doc
   };
 
   // Only add id if it's defined
@@ -36,7 +36,7 @@ function getCreateParams(service: ElasticAdapterInterface, docDescriptor: DocDes
 
   // Merge esParams but exclude index if it's already set
   const cleanEsParams = service.esParams ? { ...service.esParams } : {};
-  delete cleanEsParams.index;
+  delete (cleanEsParams as Record<string, unknown>).index;
   return Object.assign(params, cleanEsParams);
 }
 
@@ -60,10 +60,10 @@ export function create(
   const method = id !== undefined && !params.upsert ? 'create' : 'index';
 
   const modelMethod = method === 'create' ? service.Model.create : service.Model.index;
-  return modelMethod
-    .call(service.Model, createParams as any)
-    .then((result: any) => get(service, result._id, getParams))
-    .catch((error: any) => {
+  return (modelMethod as (params: never) => Promise<{ _id: string }>)
+    .call(service.Model, createParams as never)
+    .then((result: { _id: string }) => get(service, result._id, getParams))
+    .catch((error: Error) => {
       // Re-throw the error so it can be caught by the adapter's error handler
       throw error;
     });

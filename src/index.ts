@@ -39,7 +39,7 @@ class Service extends ElasticAdapter {
    * @example
    * service.get('doc123')
    */
-  async get(id: any, params?: ElasticsearchServiceParams) {
+  async get(id: string | number, params?: ElasticsearchServiceParams) {
     return this._get(id, params);
   }
 
@@ -60,7 +60,10 @@ class Service extends ElasticAdapter {
    *   { name: 'Jane', age: 25 }
    * ])
    */
-  async create(data: any, params?: ElasticsearchServiceParams) {
+  async create(
+    data: Record<string, unknown> | Record<string, unknown>[],
+    params?: ElasticsearchServiceParams
+  ) {
     return this._create(data, params);
   }
 
@@ -74,7 +77,7 @@ class Service extends ElasticAdapter {
    * @example
    * service.update('doc123', { name: 'John Updated', age: 31 })
    */
-  async update(id: any, data: any, params?: ElasticsearchServiceParams) {
+  async update(id: string | number, data: Record<string, unknown>, params?: ElasticsearchServiceParams) {
     return this._update(id, data, params);
   }
 
@@ -95,7 +98,11 @@ class Service extends ElasticAdapter {
    *   query: { createdAt: { $lte: '2023-01-01' } }
    * })
    */
-  async patch(id: any, data: any, params?: ElasticsearchServiceParams) {
+  async patch(
+    id: string | number | null,
+    data: Record<string, unknown>,
+    params?: ElasticsearchServiceParams
+  ) {
     return this._patch(id, data, params);
   }
 
@@ -115,7 +122,7 @@ class Service extends ElasticAdapter {
    *   query: { status: 'deleted' }
    * })
    */
-  async remove(id: any, params?: ElasticsearchServiceParams) {
+  async remove(id: string | number | null, params?: ElasticsearchServiceParams) {
     return this._remove(id, params);
   }
 
@@ -135,7 +142,7 @@ class Service extends ElasticAdapter {
    * // Index operations
    * service.raw('indices.getMapping')
    */
-  async raw(method: string, params?: any) {
+  async raw(method: string, params?: ElasticsearchServiceParams) {
     return this._raw(method, params);
   }
 }

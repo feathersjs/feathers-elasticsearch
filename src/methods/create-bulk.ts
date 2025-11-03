@@ -1,28 +1,32 @@
 'use strict';
 
 import { mapBulk, getDocDescriptor } from '../utils/index';
-import { ElasticsearchServiceParams } from '../types';
+import { ElasticsearchServiceParams, ElasticAdapterInterface } from '../types';
 import { getBulk } from './get-bulk';
 
-function getBulkCreateParams(service: any, data: any, params: ElasticsearchServiceParams) {
+function getBulkCreateParams(
+  service: ElasticAdapterInterface,
+  data: Record<string, unknown>[],
+  params: ElasticsearchServiceParams
+) {
   const { filters } = service.filterQuery(params);
   const index = filters?.$index || service.index;
 
   return Object.assign(
     {
       index,
-      body: data.reduce((result: any, item: any) => {
+      body: data.reduce((result: Array<Record<string, unknown>>, item: Record<string, unknown>) => {
         const { id, parent, routing, join, doc } = getDocDescriptor(service, item);
         const method = id !== undefined && !params.upsert ? 'create' : 'index';
 
         if (join) {
-          doc[service.join] = {
+          ;(doc as Record<string, unknown>)[service.join as string] = {
             name: join,
             parent
           };
         }
 
-        const op: any = { [method]: { _index: index, _id: id } };
+        const op: Record<string, Record<string, unknown>> = { [method]: { _index: index as string, _id: id } };
         if (routing) {
           op[method].routing = routing;
         }
@@ -37,47 +41,59 @@ function getBulkCreateParams(service: any, data: any, params: ElasticsearchServi
   );
 }
 
-export function createBulk(service: any, data: any, params: ElasticsearchServiceParams) {
+export function createBulk(
+  service: ElasticAdapterInterface,
+  data: Record<string, unknown>[],
+  params: ElasticsearchServiceParams
+) {
   const bulkCreateParams = getBulkCreateParams(service, data, params);
 
-  return service.Model.bulk(bulkCreateParams).then((results: any) => {
-    const created = mapBulk(results.items, service.id, service.meta, service.join);
-    // We are fetching only items which have been correctly created.
-    const docs = created
-      .map((item, index) =>
-        Object.assign(
-          {
-            [service.routing]: data[index][service.routing] || data[index][service.parent]
-          },
-          item
+  return service.Model.bulk(bulkCreateParams as never).then(
+    (results: { items: Array<Record<string, unknown>> }) => {
+      const created = mapBulk(results.items, service.id, service.meta, service.join);
+      // We are fetching only items which have been correctly created.
+      const docs = created
+        .map((item, index) =>
+          Object.assign(
+            {
+              [service.routing as string]:
+                (data[index] as Record<string, unknown>)[service.routing as string] ||
+                (data[index] as Record<string, unknown>)[service.parent as string]
+            },
+            item
+          )
         )
-      )
-      .filter((item) => item[service.meta].status === 201)
-      .map((item) => ({
-        _id: item[service.meta]._id,
-        routing: item[service.routing]
-      }));
+        .filter(
+          (item) => (item as Record<string, Record<string, unknown>>)[service.meta as string].status === 201
+        )
+        .map((item) => ({
+          _id: (item as Record<string, Record<string, unknown>>)[service.meta as string]._id,
+          routing: (item as Record<string, unknown>)[service.routing as string]
+        }));
 
-    if (!docs.length) {
-      return created;
-    }
+      if (!docs.length) {
+        return created;
+      }
 
-    return getBulk(service, docs, params).then((fetched: any) => {
-      let fetchedIndex = 0;
+      return getBulk(service, docs, params).then((fetched: unknown[]) => {
+        let fetchedIndex = 0;
 
-      // We need to return responses for all items, either success or failure,
-      // in the same order as the request.
-      return created.map((createdItem) => {
-        if ((createdItem as any)[service.meta].status === 201) {
-          const fetchedItem = fetched[fetchedIndex];
+        // We need to return responses for all items, either success or failure,
+        // in the same order as the request.
+        return created.map((createdItem) => {
+          if (
+            (createdItem as Record<string, Record<string, unknown>>)[service.meta as string].status === 201
+          ) {
+            const fetchedItem = fetched[fetchedIndex];
 
-          fetchedIndex += 1;
+            fetchedIndex += 1;
 
-          return fetchedItem;
-        }
+            return fetchedItem;
+          }
 
-        return createdItem;
+          return createdItem;
+        });
       });
-    });
-  });
+    }
+  );
 }

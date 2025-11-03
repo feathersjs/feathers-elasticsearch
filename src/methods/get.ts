@@ -2,7 +2,7 @@
 
 import { errors } from '@feathersjs/errors';
 import { mapGet, getDocDescriptor, getQueryLength } from '../utils/index';
-import { ElasticsearchServiceParams, ElasticAdapterInterface } from '../types';
+import { ElasticsearchServiceParams, ElasticAdapterInterface, QueryValue, QueryOperators } from '../types';
 
 export function get(
   service: ElasticAdapterInterface,
@@ -13,21 +13,23 @@ export function get(
   const queryLength = getQueryLength(service, query);
 
   if (queryLength >= 1) {
-    return (service.core as any)
-      ?.find(service, {
-        ...params,
-        query: {
-          $and: [params.query, { [service.id]: id }]
-        },
-        paginate: false
-      })
-      .then(([result]: any) => {
-        if (!result) {
-          throw new errors.NotFound(`No record found for id ${id}`);
-        }
+    const coreFind = (service.core as Record<string, unknown>)?.find as
+      | ((svc: ElasticAdapterInterface, params: ElasticsearchServiceParams) => Promise<unknown[]>)
+      | undefined;
 
-        return result;
-      });
+    return coreFind?.(service, {
+      ...params,
+      query: {
+        $and: [params.query ?? {}, { [service.id]: id }]
+      } as Record<string, QueryValue> & QueryOperators,
+      paginate: false
+    }).then(([result]: unknown[]) => {
+      if (!result) {
+        throw new errors.NotFound(`No record found for id ${id}`);
+      }
+
+      return result;
+    });
   }
 
   const { routing } = getDocDescriptor(service, query);
@@ -44,7 +46,7 @@ export function get(
     getParams.routing = routing;
   }
 
-  return service.Model.get(getParams).then((result: any) =>
-    mapGet(result, service.id, service.meta || '', service.join)
+  return service.Model.get(getParams).then((result) =>
+    mapGet(result as never, service.id, service.meta || '', service.join)
   );
 }

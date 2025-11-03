@@ -21,7 +21,7 @@ export function prepareGetParams(
  * @param params - Service parameters
  * @returns Elasticsearch parameters or empty object
  */
-export function getESParams(params: ElasticsearchServiceParams = {}): Record<string, any> {
+export function getESParams(params: ElasticsearchServiceParams = {}): Record<string, unknown> {
   return params.elasticsearch || {};
 }
 
@@ -32,9 +32,9 @@ export function getESParams(params: ElasticsearchServiceParams = {}): Record<str
  * @returns Merged parameters
  */
 export function mergeESParams(
-  defaultParams: Record<string, any> = {},
-  requestParams: Record<string, any> = {}
-): Record<string, any> {
+  defaultParams: Record<string, unknown> = {},
+  requestParams: Record<string, unknown> = {}
+): Record<string, unknown> {
   return Object.assign({}, defaultParams, requestParams);
 }
 

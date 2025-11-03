@@ -1,5 +1,6 @@
 import { ElasticsearchServiceOptions } from './types';
 import { errors } from '@feathersjs/errors';
+import { Client } from '@elastic/elasticsearch';
 
 /**
  * Validates adapter options and throws errors for missing required fields
@@ -17,7 +18,8 @@ export function validateOptions(options: Partial<ElasticsearchServiceOptions>): 
     );
   }
 
-  if (!options.index && (!options.elasticsearch || !(options.elasticsearch as any).index)) {
+  const esConfig = options.elasticsearch as { index?: string } | undefined;
+  if (!options.index && (!options.elasticsearch || !esConfig?.index)) {
     throw new errors.BadRequest(
       'Elasticsearch service requires `options.index` or `options.elasticsearch.index` to be provided'
     );
@@ -29,12 +31,15 @@ export function validateOptions(options: Partial<ElasticsearchServiceOptions>): 
  * @param instance - The service instance
  * @param properties - Property names to alias
  */
-export function setupPropertyAliases(instance: any, properties: string[]): void {
+export function setupPropertyAliases(
+  instance: Record<string, unknown> & { options: Record<string, unknown> },
+  properties: string[]
+): void {
   properties.forEach((name) =>
     Object.defineProperty(instance, name, {
       get() {
         return this.options[name];
-      },
+      }
     })
   );
 }
@@ -45,11 +50,12 @@ export function setupPropertyAliases(instance: any, properties: string[]): void 
  * @returns Object with Model and index
  */
 export function extractModelAndIndex(options: ElasticsearchServiceOptions): {
-  Model: any;
-  index: string;
+  Model: Client | Record<string, unknown>
+  index: string
 } {
   const Model = options.Model || options.elasticsearch;
-  const index = options.index || (options.elasticsearch as any)?.index;
-  
-  return { Model, index };
+  const esConfig = options.elasticsearch as { index?: string } | undefined;
+  const index = options.index || esConfig?.index;
+
+  return { Model: Model as Client, index: index as string };
 }

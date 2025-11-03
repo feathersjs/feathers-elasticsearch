@@ -36,8 +36,8 @@ function formatErrorMessage(error: ElasticsearchError, context?: string): string
 /**
  * Extracts detailed error information from Elasticsearch response
  */
-function extractErrorDetails(error: ElasticsearchError): Record<string, any> | undefined {
-  const details: any = {};
+function extractErrorDetails(error: ElasticsearchError): Record<string, unknown> | undefined {
+  const details: Record<string, unknown> = {};
 
   if (error.meta?.body?.error) {
     const esError = error.meta.body.error;
@@ -47,7 +47,7 @@ function extractErrorDetails(error: ElasticsearchError): Record<string, any> | u
     }
 
     if (esError.root_cause) {
-      details.rootCause = esError.root_cause.map((cause: any) => ({
+      details.rootCause = esError.root_cause.map((cause: { type?: string; reason?: string }) => ({
         type: cause.type,
         reason: cause.reason
       }));
@@ -68,30 +68,40 @@ function extractErrorDetails(error: ElasticsearchError): Record<string, any> | u
  * @param context - Optional context string for better error messages
  * @returns Feathers error
  */
-export function errorHandler(error: ElasticsearchError | any, id?: string | number, context?: string): Error {
+export function errorHandler(
+  error: ElasticsearchError | Error,
+  id?: string | number,
+  context?: string
+): Error {
   // If already a Feathers error, just return it
-  if (error.className) {
+  if ((error as { className?: string }).className) {
     return error;
   }
 
+  // Type guard for ElasticsearchError
+  const esError = error as ElasticsearchError;
+
   // Check for specific error types first
   if (
-    error.meta?.body?.error?.type === 'version_conflict_engine_exception' ||
-    (error.name === 'ResponseError' && error.meta?.statusCode === 409) ||
-    error.meta?.body?.status === 409
+    esError.meta?.body?.error?.type === 'version_conflict_engine_exception' ||
+    (esError.name === 'ResponseError' && esError.meta?.statusCode === 409) ||
+    esError.meta?.body?.status === 409
   ) {
-    const message = formatErrorMessage(error, context);
+    const message = formatErrorMessage(esError, context);
     return new errors.Conflict(message, { id });
   }
 
   // Extract status code from various error formats
   const statusCode =
-    error.statusCode || error.status || error.meta?.statusCode || error.meta?.body?.status || 500;
+    esError.statusCode || esError.status || esError.meta?.statusCode || esError.meta?.body?.status || 500;
 
   // Get the appropriate error class
   const ErrorClass = ERROR_MAP[statusCode];
 
-  if (!ErrorClass || !(errors as any)[ErrorClass]) {
+  type FeathersErrorConstructor = new (message: string, data?: Record<string, unknown>) => Error
+  const errorsMap = errors as unknown as Record<string, FeathersErrorConstructor>;
+
+  if (!ErrorClass || !errorsMap[ErrorClass]) {
     // Fallback to GeneralError for unknown status codes
     const message = formatErrorMessage(error, context);
     const details = extractErrorDetails(error);
@@ -107,7 +117,7 @@ export function errorHandler(error: ElasticsearchError | any, id?: string | numb
   const message = formatErrorMessage(error, context);
   const details = extractErrorDetails(error);
 
-  const FeathersError = (errors as any)[ErrorClass];
+  const FeathersError = errorsMap[ErrorClass];
 
   return new FeathersError(message, {
     ...(details && { details }),

@@ -14,8 +14,8 @@ export interface ValidationSchema {
   min?: number
   max?: number
   pattern?: RegExp
-  enum?: any[]
-  custom?: (_value: any) => boolean | string
+  enum?: unknown[]
+  custom?: (_value: unknown) => boolean | string
 }
 
 /**
@@ -25,7 +25,7 @@ export interface ValidationSchema {
  * @param path - Current path for error messages
  * @returns Validation errors or null if valid
  */
-export function validate(value: any, schema: ValidationSchema, path: string = 'data'): string[] | null {
+export function validate(value: unknown, schema: ValidationSchema, path: string = 'data'): string[] | null {
   const errors: string[] = [];
 
   // Check type
@@ -44,10 +44,11 @@ export function validate(value: any, schema: ValidationSchema, path: string = 'd
 
   // Object validation
   if (schema.type === 'object' && value && schema.properties) {
+    const valueObj = value as Record<string, unknown>;
     // Check required fields
     if (schema.required) {
       for (const field of schema.required) {
-        if (!(field in value) || value[field] === undefined) {
+        if (!(field in valueObj) || valueObj[field] === undefined) {
           errors.push(`${path}.${field} is required`);
         }
       }
@@ -55,8 +56,8 @@ export function validate(value: any, schema: ValidationSchema, path: string = 'd
 
     // Validate properties
     for (const [key, propSchema] of Object.entries(schema.properties)) {
-      if (key in value) {
-        const propErrors = validate(value[key], propSchema, `${path}.${key}`);
+      if (key in valueObj) {
+        const propErrors = validate(valueObj[key], propSchema, `${path}.${key}`);
         if (propErrors) {
           errors.push(...propErrors);
         }
@@ -129,8 +130,8 @@ export const schemas = {
     single: {
       type: 'object' as const,
       required: [],
-      custom: (value: any) => {
-        if (Object.keys(value).length === 0) {
+      custom: (value: unknown) => {
+        if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
           return 'Document cannot be empty';
         }
         return true;
@@ -141,8 +142,8 @@ export const schemas = {
       minLength: 1,
       items: {
         type: 'object' as const,
-        custom: (value: any) => {
-          if (Object.keys(value).length === 0) {
+        custom: (value: unknown) => {
+          if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
             return 'Document cannot be empty';
           }
           return true;
@@ -157,8 +158,8 @@ export const schemas = {
   update: {
     type: 'object' as const,
     required: [],
-    custom: (value: any) => {
-      if (Object.keys(value).length === 0) {
+    custom: (value: unknown) => {
+      if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
         return 'Update data cannot be empty';
       }
       return true;
@@ -170,8 +171,8 @@ export const schemas = {
    */
   patch: {
     type: 'object' as const,
-    custom: (value: any) => {
-      if (Object.keys(value).length === 0) {
+    custom: (value: unknown) => {
+      if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
         return 'Patch data cannot be empty';
       }
       return true;
@@ -182,7 +183,7 @@ export const schemas = {
    * Schema for ID validation
    */
   id: {
-    custom: (value: any) => {
+    custom: (value: unknown) => {
       if (value === null || value === undefined) {
         return 'ID cannot be null or undefined';
       }
@@ -202,7 +203,7 @@ export const schemas = {
  * @param data - Data to create
  * @throws {BadRequest} If validation fails
  */
-export function validateCreate(data: any): void {
+export function validateCreate(data: unknown): void {
   const schema = Array.isArray(data) ? schemas.create.bulk : schemas.create.single;
   const errors = validate(data, schema);
 
@@ -217,7 +218,7 @@ export function validateCreate(data: any): void {
  * @param data - Update data
  * @throws {BadRequest} If validation fails
  */
-export function validateUpdate(id: any, data: any): void {
+export function validateUpdate(id: unknown, data: unknown): void {
   const idErrors = validate(id, schemas.id, 'id');
   const dataErrors = validate(data, schemas.update);
 
@@ -234,7 +235,7 @@ export function validateUpdate(id: any, data: any): void {
  * @param data - Patch data
  * @throws {BadRequest} If validation fails
  */
-export function validatePatch(id: any, data: any): void {
+export function validatePatch(id: unknown, data: unknown): void {
   const errors: string[] = [];
 
   // For single patch, validate ID
@@ -261,7 +262,7 @@ export function validatePatch(id: any, data: any): void {
  * @param id - Document ID (can be null for bulk)
  * @throws {BadRequest} If validation fails
  */
-export function validateRemove(id: any): void {
+export function validateRemove(id: unknown): void {
   if (id !== null) {
     const errors = validate(id, schemas.id, 'id');
     if (errors) {

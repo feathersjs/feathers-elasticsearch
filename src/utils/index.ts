@@ -75,7 +75,8 @@ export function mapPatch<T = Record<string, unknown>>(
 ): T & Record<string, unknown> {
   const normalizedItem = removeProps(item, 'get');
 
-  normalizedItem._source = (item as any).get && (item as any).get._source;
+  const itemWithGet = item as { get?: { _source?: unknown } };
+  normalizedItem._source = itemWithGet.get && itemWithGet.get._source;
 
   return mapItem(normalizedItem, idProp, metaProp, joinProp);
 }
@@ -122,10 +123,12 @@ export function mapItem<T = Record<string, unknown>>(
   joinProp?: string
 ): T & Record<string, unknown> {
   const meta = removeProps(item as Record<string, unknown>, '_source');
-  const result: Record<string, unknown> = Object.assign({ [metaProp]: meta }, (item as any)._source);
+  const itemWithSource = item as { _source?: unknown };
+  const result: Record<string, unknown> = Object.assign({ [metaProp]: meta }, itemWithSource._source);
 
-  if ((meta as any)._id !== undefined) {
-    result[idProp] = (meta as any)._id;
+  const metaWithId = meta as { _id?: unknown };
+  if (metaWithId._id !== undefined) {
+    result[idProp] = metaWithId._id;
   }
 
   if (joinProp && result[joinProp] && typeof result[joinProp] === 'object') {

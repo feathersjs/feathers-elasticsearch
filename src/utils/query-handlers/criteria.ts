@@ -16,31 +16,27 @@ export const queryCriteriaMap: Record<string, string> = {
   $regexp: 'filter.regexp',
   $match: 'must.match',
   $phrase: 'must.match_phrase',
-  $phrase_prefix: 'must.match_phrase_prefix',
+  $phrase_prefix: 'must.match_phrase_prefix'
 };
 
 /**
  * Processes criteria operators like $gt, $in, $match, etc.
  */
-export function processCriteria(
-  key: string,
-  value: Record<string, any>,
-  esQuery: ESQuery
-): ESQuery {
+export function processCriteria(key: string, value: Record<string, unknown>, esQuery: ESQuery): ESQuery {
   Object.keys(value)
     .filter((criterion) => queryCriteriaMap[criterion])
     .forEach((criterion) => {
       const [section, term, operand] = queryCriteriaMap[criterion].split('.');
       const querySection = section as keyof ESQuery;
-      
+
       if (!Array.isArray(esQuery[querySection])) {
-        esQuery[querySection] = [] as any;
+        esQuery[querySection] = [] as never;
       }
-      
-      (esQuery[querySection] as any[]).push({
+
+      ;(esQuery[querySection] as Array<Record<string, unknown>>).push({
         [term]: {
-          [key]: operand ? { [operand]: value[criterion] } : value[criterion],
-        },
+          [key]: operand ? { [operand]: value[criterion] } : value[criterion]
+        }
       });
     });
 
@@ -50,13 +46,9 @@ export function processCriteria(
 /**
  * Processes simple term queries for primitive values
  */
-export function processTermQuery(
-  key: string,
-  value: any,
-  esQuery: ESQuery
-): ESQuery {
+export function processTermQuery(key: string, value: unknown, esQuery: ESQuery): ESQuery {
   esQuery.filter = esQuery.filter || [];
-  
+
   if (Array.isArray(value)) {
     value.forEach((val) => {
       esQuery.filter!.push({ term: { [key]: val } });
@@ -64,6 +56,6 @@ export function processTermQuery(
   } else {
     esQuery.filter.push({ term: { [key]: value } });
   }
-  
+
   return esQuery;
 }
