@@ -15,6 +15,91 @@ $ npm install --save elasticsearch feathers-elasticsearch
 
 > __Important:__ `feathers-elasticsearch` implements the [Feathers Common database adapter API](https://docs.feathersjs.com/api/databases/common.html) and [querying syntax](https://docs.feathersjs.com/api/databases/querying.html).
 
+---
+
+## 🚨 Breaking Changes in v4.0.0
+
+Version 4.0.0 introduces significant **security improvements** that include breaking changes. Please review the migration guide below.
+
+### What Changed
+
+**1. Raw Method Access - DISABLED BY DEFAULT** ⚠️
+
+The `raw()` method is now **disabled by default** for security reasons. If your application uses `raw()`, you must explicitly whitelist the methods you need.
+
+**Before (v3.x):**
+```js
+// raw() allowed any Elasticsearch API call
+await service.raw('search', { query: {...} });
+await service.raw('indices.delete', { index: 'test' });
+```
+
+**After (v4.0+):**
+```js
+// Must configure allowedRawMethods
+app.use('/messages', service({
+  Model: client,
+  elasticsearch: { index: 'test', type: 'messages' },
+  security: {
+    allowedRawMethods: ['search', 'count']  // Only allow these methods
+  }
+}));
+
+await service.raw('search', { query: {...} });      // ✅ Works
+await service.raw('indices.delete', { index: 'test' }); // ❌ Throws MethodNotAllowed
+```
+
+**2. New Security Limits**
+
+Default security limits are now enforced to prevent DoS attacks:
+- **Query depth**: Maximum 50 nested levels (`$or`, `$and`, `$nested`)
+- **Bulk operations**: Maximum 10,000 documents per operation
+- **Query strings**: Maximum 500 characters for `$sqs` queries
+- **Array size**: Maximum 10,000 items in `$in`/`$nin` arrays
+
+These limits are configurable via the `security` option (see [Security Configuration](#security-configuration)).
+
+### Migration Guide
+
+#### If you DON'T use `raw()`
+✅ **No changes needed** - Your application will continue to work with improved security.
+
+#### If you DO use `raw()`
+📝 **Action required** - Add security configuration:
+
+```js
+app.use('/messages', service({
+  Model: client,
+  elasticsearch: { index: 'test', type: 'messages' },
+  
+  // Add this security configuration
+  security: {
+    allowedRawMethods: [
+      'search',           // Safe read operation
+      'count',            // Safe read operation
+      // Only add methods you actually need
+      // Avoid destructive operations like 'indices.delete'
+    ]
+  }
+}));
+```
+
+#### If you have very deep queries or large bulk operations
+
+Configure higher limits if needed:
+
+```js
+security: {
+  maxQueryDepth: 100,          // If you need deeper nesting
+  maxBulkOperations: 50000,    // If you need larger bulk operations
+  maxArraySize: 50000,         // If you need larger $in arrays
+}
+```
+
+See [SECURITY.md](./SECURITY.md) for complete security documentation and best practices.
+
+---
+
 ## Getting Started
 
 The following bare-bones example will create a `messages` endpoint and connect to a local `messages` type in the `test` index in your Elasticsearch database:
@@ -50,6 +135,71 @@ The following options can be passed when creating a new Elasticsearch service:
 - `join` (default: undefined) [optional] - Elasticsearch 6.0+ specific. The name of the [join field](https://www.elastic.co/guide/en/elasticsearch/reference/6.0/parent-join.html) defined in the mapping type used by the service. It is required for parent-child relationship features (e.g. setting a parent, `$child` and `$parent` queries) to work.
 - `meta` (default: '_meta') [optional] - The meta property of your documents in this service. The meta field is an object containing elasticsearch specific information, e.g. `_score`, `_type`, `_index`, `_parent`, `_routing` and so forth. It will be stripped off from the documents passed to the service.
 - `whitelist` (default: `['$prefix', '$wildcard', '$regexp', '$exists', '$missing', '$all', '$match', '$phrase', '$phrase_prefix', '$and', '$sqs', '$child', '$parent', '$nested', '$fields', '$path', '$type', '$query', '$operator']`) [optional] - The list of additional non-standard query parameters to allow, by default populated with all Elasticsearch specific ones. You can override, for example in order to restrict access to some queries (see the [options documentation](https://docs.feathersjs.com/api/databases/common.html#serviceoptions)).
+- `security` [optional] - Security configuration object (new in v4.0.0). See [Security Configuration](#security-configuration) below.
+
+## Security Configuration
+
+**New in v4.0.0** - Configure security limits and access controls:
+
+```js
+app.use('/messages', service({
+  Model: client,
+  elasticsearch: { index: 'test', type: 'messages' },
+  security: {
+    // Query complexity limits
+    maxQueryDepth: 50,              // Max nesting depth for queries (default: 50)
+    maxArraySize: 10000,            // Max items in $in/$nin arrays (default: 10000)
+    
+    // Operation limits
+    maxBulkOperations: 10000,       // Max documents in bulk operations (default: 10000)
+    maxDocumentSize: 10485760,      // Max document size in bytes (default: 10MB)
+    
+    // Query string limits
+    maxQueryStringLength: 500,      // Max length for $sqs queries (default: 500)
+    
+    // Raw method whitelist (IMPORTANT: empty by default)
+    allowedRawMethods: [            // Methods allowed via raw() (default: [])
+      'search',                      // Allow search
+      'count',                       // Allow count
+      // 'indices.delete',           // ❌ Don't enable destructive methods
+    ],
+    
+    // Cross-index restrictions
+    allowedIndices: [],             // Allowed indices for $index filter (default: [])
+                                    // Empty = only service's index allowed
+    
+    // Field restrictions
+    searchableFields: [],           // Fields allowed in $sqs (default: [] = all)
+    
+    // Error handling
+    enableDetailedErrors: false,    // Show detailed errors (default: false in prod)
+    
+    // Input sanitization
+    enableInputSanitization: true,  // Prevent prototype pollution (default: true)
+  }
+}));
+```
+
+### Security Defaults
+
+If you don't provide a `security` configuration, these safe defaults are used:
+
+```js
+{
+  maxQueryDepth: 50,
+  maxArraySize: 10000,
+  maxBulkOperations: 10000,
+  maxDocumentSize: 10485760,      // 10MB
+  maxQueryStringLength: 500,
+  allowedRawMethods: [],           // ⚠️ All raw methods DISABLED
+  allowedIndices: [],              // Only default index allowed
+  searchableFields: [],            // All fields searchable
+  enableDetailedErrors: process.env.NODE_ENV !== 'production',
+  enableInputSanitization: true
+}
+```
+
+For complete security documentation, see [SECURITY.md](./SECURITY.md).
 
 ## Complete Example
 

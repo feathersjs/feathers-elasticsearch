@@ -16,6 +16,7 @@ import type {
   MgetRequest,
   MgetResponse
 } from '@elastic/elasticsearch/lib/api/types';
+import type { SecurityConfig } from './utils/security';
 
 // Re-export commonly used ES types
 export type {
@@ -34,6 +35,35 @@ export type {
   MgetRequest,
   MgetResponse
 };
+
+// Error Types
+export interface ElasticsearchErrorMeta {
+  body?: {
+    error?: {
+      type?: string
+      reason?: string
+      caused_by?: {
+        type: string
+        reason: string
+      }
+      root_cause?: Array<{
+        type: string
+        reason: string
+      }>
+      failures?: Array<Record<string, unknown>>
+    }
+    status?: number
+  }
+  statusCode?: number
+  headers?: Record<string, string>
+}
+
+export interface ElasticsearchError extends Error {
+  name: string
+  statusCode?: number
+  status?: number
+  meta?: ElasticsearchErrorMeta
+}
 
 // Document Types
 export interface DocumentMeta {
@@ -233,6 +263,7 @@ export interface ElasticsearchServiceOptions {
   paginate?: PaginationOptions
   filters?: Record<string, (val: unknown) => unknown>
   operators?: string[]
+  security?: SecurityConfig
 }
 
 export interface ElasticsearchServiceParams extends AdapterParams {
@@ -252,20 +283,27 @@ export interface DocDescriptor {
 // Method Signatures
 export interface ElasticAdapterInterface {
   Model: Client
-  index?: string
+  index: string
   id: string
   parent?: string
   routing?: string
   join?: string
-  meta?: string
+  meta: string
   esVersion?: string
   esParams?: Record<string, unknown>
+  security: Required<SecurityConfig>
   core?: Record<string, unknown>
   filterQuery: (params: ElasticsearchServiceParams) => {
     filters: Record<string, unknown>
     query: Record<string, unknown>
     paginate?: PaginationOptions | false
   }
+  _find: (params?: ElasticsearchServiceParams) => Promise<unknown>
+  _get: (id: string | number, params?: ElasticsearchServiceParams) => Promise<unknown>
+  _create: (
+    data: Record<string, unknown> | Record<string, unknown>[],
+    params?: ElasticsearchServiceParams
+  ) => Promise<unknown>
 }
 
 export type ElasticsearchMethod<T = unknown> = (
@@ -273,6 +311,9 @@ export type ElasticsearchMethod<T = unknown> = (
   data: Record<string, unknown> | Record<string, unknown>[],
   params?: ElasticsearchServiceParams
 ) => Promise<T>
+
+// Re-export SecurityConfig for convenience
+export type { SecurityConfig } from './utils/security';
 
 // Utility Types
 export type ValidatorType =
@@ -290,49 +331,21 @@ export interface CachedQuery {
   result: ESQuery | null
 }
 
-// Error Types
-export interface ElasticsearchErrorMeta {
-  body?: {
-    error?: {
-      type?: string
-      reason?: string
-      caused_by?: {
-        type: string
-        reason: string
-      }
-      root_cause?: Array<{
-        type: string
-        reason: string
-      }>
-      failures?: any[]
-    }
-    status?: number
-  }
-  statusCode?: number
-  headers?: Record<string, string>
-}
-
-export interface ElasticsearchError extends Error {
-  meta?: ElasticsearchErrorMeta
-  statusCode?: number
-  status?: number
-}
-
 // Result Types
-export interface PaginatedResult<T = any> {
+export interface PaginatedResult<T = Record<string, unknown>> {
   total: number
   limit: number
   skip: number
   data: T[]
 }
 
-export type ServiceResult<T = any> = T | T[] | PaginatedResult<T>
+export type ServiceResult<T = Record<string, unknown>> = T | T[] | PaginatedResult<T>
 
 // Adapter Types
 export interface AdapterOptions extends Omit<ElasticsearchServiceOptions, 'multi'> {
   events?: string[]
   multi?: boolean | string[]
-  filters?: Record<string, any>
+  filters?: Record<string, (val: unknown) => unknown>
   operators?: string[]
 }
 
@@ -340,12 +353,12 @@ export interface AdapterOptions extends Omit<ElasticsearchServiceOptions, 'multi
 export interface BulkOperation {
   action: 'index' | 'create' | 'update' | 'delete'
   id?: string
-  data?: Record<string, any>
-  params?: Record<string, any>
+  data?: Record<string, unknown>
+  params?: Record<string, unknown>
 }
 
-export interface BulkResult<T = any> {
+export interface BulkResult<T = Record<string, unknown>> {
   items: T[]
-  errors?: any[]
+  errors?: Array<Record<string, unknown>>
   raw?: ESBulkResponse
 }

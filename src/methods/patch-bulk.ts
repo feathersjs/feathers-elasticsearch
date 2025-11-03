@@ -1,12 +1,13 @@
 'use strict';
 
 import { mapBulk, removeProps, getDocDescriptor } from '../utils/index';
-import { ElasticsearchServiceParams } from '../types';
+import { ElasticsearchServiceParams, ElasticAdapterInterface } from '../types';
+import { errors } from '@feathersjs/errors';
 
 /**
  * Prepares find parameters for bulk patch operation
  */
-function prepareFindParams(_service: any, params: ElasticsearchServiceParams) {
+function prepareFindParams(_service: ElasticAdapterInterface, params: ElasticsearchServiceParams) {
   return Object.assign(removeProps(params as Record<string, unknown>, 'query'), {
     query: Object.assign({}, params.query, { $select: false })
   });
@@ -15,14 +16,20 @@ function prepareFindParams(_service: any, params: ElasticsearchServiceParams) {
 /**
  * Creates bulk update operations from found documents
  */
-function createBulkOperations(service: any, found: any[], data: any, index: string): any[] {
-  return found.reduce((result: any[], item: any) => {
-    const { _id, _parent: parent, _routing: routing } = item[service.meta];
+function createBulkOperations(
+  service: ElasticAdapterInterface,
+  found: Array<Record<string, unknown>>,
+  data: Record<string, unknown>,
+  index: string | undefined
+): Array<Record<string, unknown>> {
+  return found.reduce((result: Array<Record<string, unknown>>, item: Record<string, unknown>) => {
+    const metaData = (item as Record<string, Record<string, unknown>>)[service.meta as string];
+    const { _id, _parent: parent, _routing: routing } = metaData;
     const { doc } = getDocDescriptor(service, data);
 
-    const updateOp: any = {
+    const updateOp: Record<string, Record<string, unknown>> = {
       update: {
-        _index: index,
+        _index: index as string,
         _id
       }
     };
@@ -41,7 +48,11 @@ function createBulkOperations(service: any, found: any[], data: any, index: stri
 /**
  * Prepares bulk update parameters
  */
-function prepareBulkUpdateParams(service: any, operations: any[], index: string): any {
+function prepareBulkUpdateParams(
+  service: ElasticAdapterInterface,
+  operations: Array<Record<string, unknown>>,
+  index: string
+): { params: Record<string, unknown>; needsRefresh: boolean } {
   const params = Object.assign(
     {
       index,
@@ -51,7 +62,7 @@ function prepareBulkUpdateParams(service: any, operations: any[], index: string)
   );
 
   // Remove refresh from bulk params but return it separately
-  const needsRefresh = params.refresh;
+  const needsRefresh = params.refresh as boolean;
   delete params.refresh;
 
   return { params, needsRefresh };
@@ -61,11 +72,11 @@ function prepareBulkUpdateParams(service: any, operations: any[], index: string)
  * Handles refresh if needed after bulk operation
  */
 async function handleRefresh(
-  service: any,
-  bulkResult: any,
+  service: ElasticAdapterInterface,
+  bulkResult: unknown,
   needsRefresh: boolean,
   index: string
-): Promise<any> {
+): Promise<unknown> {
   if (needsRefresh) {
     await service.Model.indices.refresh({ index });
   }
@@ -75,22 +86,25 @@ async function handleRefresh(
 /**
  * Gets IDs of successfully updated documents
  */
-function getUpdatedIds(bulkResult: any): string[] {
-  return bulkResult.items
-    .filter((item: any) => item.update && (item.update.result === 'updated' || item.update.result === 'noop'))
-    .map((item: any) => item.update._id);
+function getUpdatedIds(bulkResult: Record<string, unknown>): string[] {
+  return (bulkResult.items as Array<Record<string, unknown>>)
+    .filter((item: Record<string, unknown>) => {
+      const update = item.update as Record<string, unknown>;
+      return update && (update.result === 'updated' || update.result === 'noop');
+    })
+    .map((item: Record<string, unknown>) => (item.update as Record<string, unknown>)._id as string);
 }
 
 /**
  * Fetches updated documents with selected fields
  */
 async function fetchUpdatedDocuments(
-  service: any,
+  service: ElasticAdapterInterface,
   updatedIds: string[],
   index: string,
-  filters: any
-): Promise<any> {
-  const getParams: any = {
+  filters: Record<string, unknown>
+): Promise<unknown> {
+  const getParams: Record<string, unknown> = {
     index,
     body: {
       ids: updatedIds
@@ -108,26 +122,31 @@ async function fetchUpdatedDocuments(
 /**
  * Maps fetched documents to result format
  */
-function mapFetchedDocuments(mgetResult: any, bulkResult: any, service: any): any[] {
+function mapFetchedDocuments(
+  mgetResult: Record<string, unknown>,
+  bulkResult: Record<string, unknown>,
+  service: ElasticAdapterInterface
+): unknown[] {
   // Create a map of fetched documents
-  const docMap: any = {};
-  mgetResult.docs.forEach((doc: any) => {
+  const docMap: Record<string, unknown> = {}
+  ;(mgetResult.docs as Array<Record<string, unknown>>).forEach((doc: Record<string, unknown>) => {
     if (doc.found) {
-      docMap[doc._id] = doc._source;
+      docMap[doc._id as string] = doc._source;
     }
   });
 
   // Merge the selected fields with the bulk results
-  return bulkResult.items.map((item: any) => {
-    if (item.update && docMap[item.update._id]) {
-      const doc = docMap[item.update._id];
+  return (bulkResult.items as Array<Record<string, unknown>>).map((item: Record<string, unknown>) => {
+    const update = item.update as Record<string, unknown>;
+    if (update && docMap[update._id as string]) {
+      const doc = docMap[update._id as string] as Record<string, unknown>;
       // Add the id field
-      doc[service.id] = item.update._id;
+      doc[service.id] = update._id;
       // Add metadata
-      doc[service.meta] = {
-        _id: item.update._id,
-        _index: item.update._index,
-        status: item.update.status || 200
+      doc[service.meta as string] = {
+        _id: update._id,
+        _index: update._index,
+        status: update.status || 200
       };
       return doc;
     }
@@ -142,19 +161,33 @@ function mapFetchedDocuments(mgetResult: any, bulkResult: any, service: any): an
  * @param params - Service parameters
  * @returns Promise resolving to patched documents
  */
-export async function patchBulk(service: any, data: any, params: ElasticsearchServiceParams): Promise<any> {
+export async function patchBulk(
+  service: ElasticAdapterInterface,
+  data: Record<string, unknown>,
+  params: ElasticsearchServiceParams
+): Promise<unknown> {
   const { filters } = service.filterQuery(params);
-  const index = filters.$index || service.index;
+  const index = (filters.$index as string) || service.index;
 
   // Step 1: Find documents to patch
   const findParams = prepareFindParams(service, params);
   const results = await service._find(findParams);
 
   // Handle paginated results
-  const found = Array.isArray(results) ? results : results.data;
+  const found = Array.isArray(results)
+    ? results
+    : ((results as Record<string, unknown>).data as Array<Record<string, unknown>>);
 
   if (!found.length) {
     return found;
+  }
+
+  // SECURITY: Enforce maximum bulk operation limit
+  const maxBulkOps = service.security.maxBulkOperations;
+  if (found.length > maxBulkOps) {
+    throw new errors.BadRequest(
+      `Bulk operation would affect ${found.length} documents, maximum allowed is ${maxBulkOps}`
+    );
   }
 
   // Step 2: Create bulk operations
@@ -163,20 +196,23 @@ export async function patchBulk(service: any, data: any, params: ElasticsearchSe
   // Step 3: Prepare and execute bulk update
   const { params: bulkUpdateParams, needsRefresh } = prepareBulkUpdateParams(service, operations, index);
 
-  let bulkResult = await service.Model.bulk(bulkUpdateParams);
+  let bulkResult = (await service.Model.bulk(bulkUpdateParams as never)) as unknown as Record<string, unknown>;
 
   // Step 4: Handle refresh if needed
-  bulkResult = await handleRefresh(service, bulkResult, needsRefresh, index);
+  bulkResult = (await handleRefresh(service, bulkResult, needsRefresh, index)) as Record<string, unknown>;
 
   // Step 5: Get updated document IDs
   const updatedIds = getUpdatedIds(bulkResult);
 
   if (updatedIds.length === 0) {
-    return mapBulk(bulkResult.items, service.id, service.meta, service.join);
+    return mapBulk(bulkResult.items as Array<Record<string, unknown>>, service.id, service.meta, service.join);
   }
 
   // Step 6: Fetch updated documents with selected fields
-  const mgetResult = await fetchUpdatedDocuments(service, updatedIds, index, filters);
+  const mgetResult = (await fetchUpdatedDocuments(service, updatedIds, index, filters)) as Record<
+    string,
+    unknown
+  >;
 
   // Step 7: Map and return results
   return mapFetchedDocuments(mgetResult, bulkResult, service);

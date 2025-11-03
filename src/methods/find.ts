@@ -33,7 +33,8 @@ export function find(service: ElasticAdapterInterface, params: ElasticsearchServ
     }
   });
 
-  let esQuery = parseQuery(enhancedQuery, service.id);
+  // Parse query with security-enforced max depth
+  let esQuery = parseQuery(enhancedQuery, service.id, service.security.maxQueryDepth);
 
   const findParams: SearchRequest = {
     index: (filters.$index as string) ?? service.index,
@@ -48,7 +49,14 @@ export function find(service: ElasticAdapterInterface, params: ElasticsearchServ
   // The `refresh` param is not recognised for search in Es.
   delete (findParams as Record<string, unknown>).refresh;
 
-  return service.Model.search(findParams).then((result: any) =>
-    mapFind(result, service.id, service.meta || '', service.join, filters, !!(paginate && paginate.default))
+  return service.Model.search(findParams).then((result) =>
+    mapFind(
+      result as never,
+      service.id,
+      service.meta || '',
+      service.join,
+      filters,
+      !!(paginate && paginate.default)
+    )
   );
 }
