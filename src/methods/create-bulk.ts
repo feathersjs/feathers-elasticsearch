@@ -1,6 +1,7 @@
 'use strict'
 
 import { mapBulk, getDocDescriptor } from '../utils/index'
+import { mergeESParamsWithRefresh } from '../utils/params'
 import { ElasticsearchServiceParams, ElasticAdapterInterface } from '../types'
 import { getBulk } from './get-bulk'
 
@@ -12,6 +13,7 @@ function getBulkCreateParams(
   const { filters } = service.filterQuery(params)
   const index = filters?.$index || service.index
 
+  // PERFORMANCE: Merge esParams with per-operation refresh override
   return Object.assign(
     {
       index,
@@ -37,7 +39,7 @@ function getBulkCreateParams(
         return result
       }, [])
     },
-    service.esParams
+    mergeESParamsWithRefresh(service.esParams, params)
   )
 }
 
@@ -72,6 +74,11 @@ export function createBulk(
         }))
 
       if (!docs.length) {
+        return created
+      }
+
+      // PERFORMANCE: Lean mode - skip fetching full documents if requested
+      if (params.lean) {
         return created
       }
 

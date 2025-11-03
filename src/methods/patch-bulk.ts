@@ -1,6 +1,8 @@
 'use strict'
 
 import { mapBulk, removeProps, getDocDescriptor } from '../utils/index'
+import { mergeESParamsWithRefresh } from '../utils/params'
+import { validateQueryComplexity } from '../utils/security'
 import { ElasticsearchServiceParams, ElasticAdapterInterface } from '../types'
 import { errors } from '@feathersjs/errors'
 
@@ -51,14 +53,16 @@ function createBulkOperations(
 function prepareBulkUpdateParams(
   service: ElasticAdapterInterface,
   operations: Array<Record<string, unknown>>,
-  index: string
+  index: string,
+  requestParams: ElasticsearchServiceParams
 ): { params: Record<string, unknown>; needsRefresh: boolean } {
+  // PERFORMANCE: Merge esParams with per-operation refresh override
   const params = Object.assign(
     {
       index,
       body: operations
     },
-    service.esParams
+    mergeESParamsWithRefresh(service.esParams, requestParams)
   )
 
   // Remove refresh from bulk params but return it separately
@@ -169,6 +173,9 @@ export async function patchBulk(
   const { filters } = service.filterQuery(params)
   const index = (filters.$index as string) || service.index
 
+  // PERFORMANCE: Validate query complexity budget
+  validateQueryComplexity(params.query || {}, service.security.maxQueryComplexity)
+
   // Step 1: Find documents to patch
   const findParams = prepareFindParams(service, params)
   const results = await service._find(findParams)
@@ -194,7 +201,12 @@ export async function patchBulk(
   const operations = createBulkOperations(service, found, data, index)
 
   // Step 3: Prepare and execute bulk update
-  const { params: bulkUpdateParams, needsRefresh } = prepareBulkUpdateParams(service, operations, index)
+  const { params: bulkUpdateParams, needsRefresh } = prepareBulkUpdateParams(
+    service,
+    operations,
+    index,
+    params
+  )
 
   let bulkResult = (await service.Model.bulk(bulkUpdateParams as never)) as unknown as Record<string, unknown>
 
@@ -205,6 +217,11 @@ export async function patchBulk(
   const updatedIds = getUpdatedIds(bulkResult)
 
   if (updatedIds.length === 0) {
+    return mapBulk(bulkResult.items as Array<Record<string, unknown>>, service.id, service.meta, service.join)
+  }
+
+  // PERFORMANCE: Lean mode - skip fetching full documents if requested
+  if (params.lean) {
     return mapBulk(bulkResult.items as Array<Record<string, unknown>>, service.id, service.meta, service.join)
   }
 

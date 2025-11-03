@@ -1,9 +1,14 @@
 'use strict'
 
+import { mergeESParamsWithRefresh } from '../utils/params'
+import { validateQueryComplexity } from '../utils/security'
 import { ElasticsearchServiceParams, ElasticAdapterInterface } from '../types'
 import { errors } from '@feathersjs/errors'
 
 export function removeBulk(service: ElasticAdapterInterface, params: ElasticsearchServiceParams) {
+  // PERFORMANCE: Validate query complexity budget
+  validateQueryComplexity(params.query || {}, service.security.maxQueryComplexity)
+
   const { find } = service.core as Record<
     string,
     (svc: ElasticAdapterInterface, params: ElasticsearchServiceParams) => Promise<unknown>
@@ -26,6 +31,7 @@ export function removeBulk(service: ElasticAdapterInterface, params: Elasticsear
       )
     }
 
+    // PERFORMANCE: Merge esParams with per-operation refresh override
     const bulkRemoveParams = Object.assign(
       {
         body: found.map((item: Record<string, unknown>) => {
@@ -35,11 +41,25 @@ export function removeBulk(service: ElasticAdapterInterface, params: Elasticsear
           return { delete: { _id, routing: routing || parent } }
         })
       },
-      service.esParams
+      mergeESParamsWithRefresh(service.esParams, params)
     )
 
     return service.Model.bulk(bulkRemoveParams).then((results: unknown) => {
       const resultItems = (results as Record<string, unknown>).items as Array<Record<string, unknown>>
+
+      // PERFORMANCE: Lean mode - return minimal info without full documents
+      if (params.lean) {
+        return resultItems
+          .filter((item: Record<string, unknown>) => {
+            const deleteResult = item.delete as Record<string, unknown>
+            return deleteResult.status === 200
+          })
+          .map((item: Record<string, unknown>) => {
+            const deleteResult = item.delete as Record<string, unknown>
+            return { [service.id]: deleteResult._id }
+          })
+      }
+
       return resultItems
         .map((item: Record<string, unknown>, index: number) => {
           const deleteResult = item.delete as Record<string, unknown>

@@ -270,6 +270,8 @@ export interface ElasticsearchServiceParams extends AdapterParams {
   query?: Record<string, QueryValue> & QueryOperators
   elasticsearch?: Record<string, unknown>
   upsert?: boolean
+  lean?: boolean // Skip fetching full documents after bulk operations (performance optimization)
+  refresh?: boolean | 'wait_for' // Control when index refresh happens
 }
 
 export interface DocDescriptor {
