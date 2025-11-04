@@ -5,6 +5,7 @@
   "homepage": "https://github.com/feathersjs-ecosystem/feathers-elasticsearch",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "type": "module",
   "keywords": [
     "feathers",
     "feathers-plugin"

@@ -667,14 +667,8 @@ When you just want to run coverage:
 ES_VERSION=6.7.2 npm run coverage
 ```
 
-## Born out of need
-
-feathers-elasticsearch was born out of need. When I was building [Hacker Search](https://hacker-search.net) (a real time search engine for Hacker News), I chose Elasticsearch for the database and Feathers for the application framework. All well and good, the only snag was a missing adapter, which would marry the two together. I decided to take a detour from the main project and create the missing piece. Three weeks had passed and the result was... another project (typical, isn't it). Everything went to plan however, and Hacker Search has been happily using feathers-elasticsearch since its first release.
-
-If you want to see the adapter in action, jump on Hacker Search and watch the queries sent from the client. Feel free to play around with the API.
-
 ## License
 
-Copyright (c) 2018
+Copyright (c) 2025
 
 Licensed under the [MIT license](LICENSE).
