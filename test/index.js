@@ -4,7 +4,7 @@ const adapterTests = require('@feathersjs/adapter-tests')
 const feathers = require('@feathersjs/feathers')
 const errors = require('@feathersjs/errors')
 const service = require('../lib')
-const db = require('../test-utils/test-db')
+const db = require('./test-db')
 const coreTests = require('./core')
 const { getCompatProp } = require('../lib/utils/core')
 

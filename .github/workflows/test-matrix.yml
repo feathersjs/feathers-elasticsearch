@@ -77,9 +77,3 @@ jobs:
           ES_VERSION=${{ matrix.elasticsearch-version }} \
           ELASTICSEARCH_URL=http://localhost:9200 \
           npm run mocha
-
-      - name: Upload coverage
-        if: matrix.node-version == '20' && matrix.elasticsearch-version == '8.15.0'
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage/lcov.info
