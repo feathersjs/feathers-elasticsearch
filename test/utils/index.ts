@@ -223,7 +223,7 @@ describe('Elasticsearch utils', () => {
 
   describe('mapBulk', () => {
     it('should get rid of action name property swap around meta and the doc', () => {
-      const items = [
+      const items: any[] = [
         { create: { status: 409, _id: '12' } },
         { index: { result: 'created', _id: '13' } },
         { delete: { result: 'deleted' } },
@@ -256,7 +256,7 @@ describe('Elasticsearch utils', () => {
     })
 
     it('should not change original items', () => {
-      const items = [{ create: { status: 409, _id: '12' } }]
+      const items: any[] = [{ create: { status: 409, _id: '12' } }]
       const itemsSnapshot = JSON.stringify(items)
 
       mapBulk(items, 'id', '_meta')
