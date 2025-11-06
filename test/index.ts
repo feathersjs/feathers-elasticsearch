@@ -1,12 +1,12 @@
-const { expect } = require('chai')
-const adapterTests = require('@feathersjs/adapter-tests')
+import { expect } from 'chai'
+import adapterTests from '@feathersjs/adapter-tests'
 
-const feathers = require('@feathersjs/feathers')
-const errors = require('@feathersjs/errors')
-const service = require('../lib')
-const db = require('./test-db')
-const coreTests = require('./core')
-const { getCompatProp } = require('../lib/utils/core')
+import feathers from '@feathersjs/feathers'
+import errors from '@feathersjs/errors'
+import service from '../lib/index.js'
+import * as db from './test-db.js'
+import * as coreTests from './core/index.js'
+import { getCompatProp } from '../lib/utils/core.js'
 
 describe('Elasticsearch Service', () => {
   const app = feathers()
@@ -25,8 +25,8 @@ describe('Elasticsearch Service', () => {
         elasticsearch: db.getServiceConfig(serviceName),
         security: {
           // Enable raw methods for testing
-          allowedRawMethods: ['search', 'indices.getMapping']
-        }
+          allowedRawMethods: ['search', 'indices.getMapping'],
+        },
       })
     )
     app.use(
@@ -40,8 +40,8 @@ describe('Elasticsearch Service', () => {
         join: getCompatProp({ '6.0': 'aka' }, esVersion),
         security: {
           // Enable raw methods for testing
-          allowedRawMethods: ['search', 'indices.getMapping']
-        }
+          allowedRawMethods: ['search', 'indices.getMapping'],
+        },
       })
     )
   })
@@ -50,8 +50,9 @@ describe('Elasticsearch Service', () => {
     await db.deleteSchema()
   })
 
-  it('is CommonJS compatible', () => {
-    expect(typeof require('../lib')).to.equal('function')
+  it('is CommonJS compatible', async () => {
+    const commonJsModule = await import('../lib/index.js')
+    expect(typeof commonJsModule.default).to.equal('function')
   })
 
   describe('Initialization', () => {
@@ -60,7 +61,9 @@ describe('Elasticsearch Service', () => {
     })
 
     it('throws an error when missing `options.Model`', () => {
-      expect(service.bind(null, {})).to.throw('Elasticsearch `Model` (client) needs to be provided')
+      expect(service.bind(null, {} as any)).to.throw(
+        'Elasticsearch `Model` (client) needs to be provided'
+      )
     })
   })
 
@@ -81,7 +84,7 @@ describe('Elasticsearch Service', () => {
           bio: 'I like JavaScript.',
           tags: ['javascript', 'programmer'],
           addresses: [{ street: '1 The Road' }, { street: 'Programmer Lane' }],
-          aka: 'real'
+          aka: 'real',
         },
         {
           id: 'moody',
@@ -89,7 +92,7 @@ describe('Elasticsearch Service', () => {
           bio: "I don't like .NET.",
           tags: ['programmer'],
           addresses: [{ street: '2 The Road' }, { street: 'Developer Lane' }],
-          aka: 'real'
+          aka: 'real',
         },
         {
           id: 'douglas',
@@ -98,8 +101,8 @@ describe('Elasticsearch Service', () => {
           tags: ['javascript', 'legend', 'programmer'],
           addresses: [{ street: '3 The Road' }, { street: 'Coder Alley' }],
           phone: '0123455567',
-          aka: 'real'
-        }
+          aka: 'real',
+        },
       ])
 
       await app.service('aka').create([
@@ -107,10 +110,10 @@ describe('Elasticsearch Service', () => {
           name: 'The Master',
           parent: 'douglas',
           id: 'douglasAka',
-          aka: 'alias'
+          aka: 'alias',
         },
         { name: 'Teacher', parent: 'douglas', aka: 'alias' },
-        { name: 'Teacher', parent: 'moody', aka: 'alias' }
+        { name: 'Teacher', parent: 'moody', aka: 'alias' },
       ])
     })
 

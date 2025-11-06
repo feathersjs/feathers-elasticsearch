@@ -1,21 +1,21 @@
-const { expect } = require('chai')
-const errors = require('@feathersjs/errors')
+import { expect } from 'chai'
+import errors from '@feathersjs/errors'
 
-function update (app, serviceName) {
+function update(app: any, serviceName: string) {
   describe('update()', () => {
     it('should update an item with provided id', () => {
       const service = app.service(serviceName)
 
       return service
         .create({ name: 'Bob', id: 'BobId' })
-        .then(_value => service.update('BobId', { name: 'Box', id: 'BobId' }))
-        .then(result => {
+        .then((_value: any) => service.update('BobId', { name: 'Box', id: 'BobId' }))
+        .then((result: any) => {
           expect(result.name).to.equal('Box')
           expect(result.id).to.equal('BobId')
 
           return service.get('BobId')
         })
-        .then(result => {
+        .then((result: any) => {
           expect(result.name).to.equal('Box')
 
           return service.remove('BobId')
@@ -27,8 +27,10 @@ function update (app, serviceName) {
 
       return service
         .update('BobId', { name: 'Bob', id: 'BobId' })
-        .then(() => { throw new Error('Should never get here') })
-        .catch(error => {
+        .then(() => {
+          throw new Error('Should never get here')
+        })
+        .catch((error: any) => {
           expect(error instanceof errors.NotFound).to.be.true
         })
     })
@@ -38,13 +40,13 @@ function update (app, serviceName) {
 
       return service
         .update('BobId', { name: 'Bob', id: 'BobId' }, { upsert: true })
-        .then(result => {
+        .then((result: any) => {
           expect(result.name).to.equal('Bob')
           expect(result.id).to.equal('BobId')
 
           return service.get('BobId')
         })
-        .then(result => {
+        .then((result: any) => {
           expect(result.name).to.equal('Bob')
 
           return service.remove('BobId')
@@ -52,25 +54,21 @@ function update (app, serviceName) {
     })
 
     it('should update an item with specified parent', () => {
-      return app.service('aka')
+      return app
+        .service('aka')
         .create({ name: 'Bobster', parent: 'bob', id: 'bobAka', aka: 'alias' })
         .then(() => {
-          return app.service('aka').update(
-            'bobAka',
-            { name: 'Boberson' },
-            { query: { parent: 'bob' } }
-          )
+          return app
+            .service('aka')
+            .update('bobAka', { name: 'Boberson' }, { query: { parent: 'bob' } })
         })
-        .then(result => {
+        .then((result: any) => {
           expect(result.name).to.equal('Boberson')
 
-          return app.service('aka').remove(
-            'bobAka',
-            { query: { parent: 'bob' } }
-          )
+          return app.service('aka').remove('bobAka', { query: { parent: 'bob' } })
         })
     })
   })
 }
 
-module.exports = update
+export default update

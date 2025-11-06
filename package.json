@@ -38,7 +38,7 @@
     "release:major": "npm version major && npm publish",
     "changelog": "github_changelog_generator && git add CHANGELOG.md && git commit -am \"Updating changelog\"",
     "lint": "eslint --fix .",
-    "mocha": "mocha --recursive test/",
+    "mocha": "mocha --require tsx --recursive 'test/**/*.ts'",
     "coverage": "nyc npm run mocha",
     "test": "npm run lint && npm run build && npm run coverage",
     "docker:up": "docker-compose up -d",
@@ -82,6 +82,7 @@
     "shx": "^0.3.4",
     "sinon": "^21.0.0",
     "sqlite3": "^5.1.2",
+    "tsx": "^4.20.6",
     "typescript": "^4.8.4"
   }
 }

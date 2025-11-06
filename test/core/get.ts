@@ -1,15 +1,16 @@
-const { expect } = require('chai')
+import { expect } from 'chai'
 
-function get (app, _serviceName) {
+function get(app: any, _serviceName: string) {
   describe('get()', () => {
     it('should get an item with specified parent', () => {
-      return app.service('aka')
+      return app
+        .service('aka')
         .get('douglasAka', { query: { parent: 'douglas' } })
-        .then(result => {
+        .then((result: any) => {
           expect(result.name).to.equal('The Master')
         })
     })
   })
 }
 
-module.exports = get
+export default get

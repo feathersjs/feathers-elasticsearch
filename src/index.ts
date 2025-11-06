@@ -167,5 +167,5 @@ function service(options: ElasticsearchServiceOptions) {
   return new Service(options)
 }
 
-// CommonJS compatible export
-export = service
+// ESM default export
+export default service
