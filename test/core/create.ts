@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import errors from '@feathersjs/errors'
+import { errors } from '@feathersjs/errors'
 
 function create(app: any, serviceName: string) {
   describe('create()', () => {

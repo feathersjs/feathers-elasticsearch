@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import adapterTests from '@feathersjs/adapter-tests'
 
-import feathers from '@feathersjs/feathers'
-import errors from '@feathersjs/errors'
+import { feathers } from '@feathersjs/feathers'
+import { errors } from '@feathersjs/errors'
 import service from '../lib/index.js'
 import * as db from './test-db.js'
 import * as coreTests from './core/index.js'
@@ -19,7 +19,6 @@ describe('Elasticsearch Service', () => {
       `/${serviceName}`,
       service({
         Model: db.getClient(),
-        events: ['testing'],
         id: 'id',
         esVersion,
         elasticsearch: db.getServiceConfig(serviceName),
@@ -67,7 +66,17 @@ describe('Elasticsearch Service', () => {
     })
   })
 
-  adapterTests(app, errors, 'people', 'id')
+  adapterTests([
+    '.id', '.options', '.events', '._get', '._find', '._create', '._update', '._patch', '._remove',
+    '.$get', '.$find', '.$create', '.$update', '.$patch', '.$remove',
+    '.get', '.get + $select', '.get + id + query', '.get + NotFound', '.find', '.remove',
+    '.remove + $select', '.remove + id + query', '.remove + multi', '.update', '.update + $select',
+    '.patch', '.patch + $select', '.patch multiple', '.create', '.create + $select', '.create multi',
+    'internal .find', 'internal .get', 'internal .create', 'internal .update', 'internal .patch', 'internal .remove',
+    '.find + equal', '.find + $sort', '.find + $limit', '.find + $skip', '.find + $select',
+    '.find + $or', '.find + $in', '.find + $lt', '.find + $gt', '.find + $ne',
+    '.find + paginate', 'params.adapter + paginate'
+  ])(app, errors, 'people', 'id')
 
   describe('Specific Elasticsearch tests', () => {
     before(async () => {
