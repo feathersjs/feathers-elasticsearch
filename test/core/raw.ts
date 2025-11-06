@@ -50,7 +50,8 @@ function raw(app: any, serviceName: string, esVersion: string) {
         .service('aka')
         .raw('indices.getMapping', {})
         .then((results: any) => {
-          expect(results).to.have.nested.property(...getCompatProp(mappings, esVersion))
+          const [path, value] = getCompatProp(mappings, esVersion) as [string, string]
+          expect(results).to.have.nested.property(path, value)
         })
     })
 
