@@ -118,8 +118,8 @@ const specialQueryHandlers: Record<string, QueryHandler> = {
  * @returns Parsed Elasticsearch query or null if empty
  */
 export function parseQuery(
-  query: Record<string, unknown>,
-  idProp: string,
+  query?: Record<string, unknown> | null,
+  idProp: string = '',
   maxDepth: number = 50,
   currentDepth: number = 0
 ): ESQuery | null {
