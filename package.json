@@ -46,11 +46,7 @@
     "docker:logs": "docker-compose logs -f elasticsearch",
     "docker:test": "npm run docker:up && npm run docker:wait && npm run test:integration && npm run docker:down",
     "docker:wait": "node scripts/wait-for-elasticsearch.js",
-    "test:integration": "ES_VERSION=8.15.0 ELASTICSEARCH_URL=http://localhost:9201 npm run test",
-    "test:es8": "ES_VERSION=8.15.0 ELASTICSEARCH_URL=http://localhost:9201 npm run mocha",
-    "test:es9": "ES_VERSION=9.0.0 ELASTICSEARCH_URL=http://localhost:9202 npm run mocha",
-    "test:multi": "./test-es-versions.sh",
-    "test:all-versions": "npm run lint && npm run build && npm run test:multi"
+    "test:integration": "ES_VERSION=8.15.0 ELASTICSEARCH_URL=http://localhost:9200 npm run test"
   },
   "directories": {
     "lib": "lib"
