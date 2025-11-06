@@ -39,31 +39,15 @@ export default [
     }
   },
   {
-    files: ['test/**/*.js', 'test-utils/**/*.js'],
+    files: ['test/**/*.ts', 'test-utils/**/*.ts'],
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: 'commonjs',
+      sourceType: 'module',
+      parser: tsParser,
       globals: {
-        require: 'readonly',
-        module: 'writable',
-        exports: 'writable',
         process: 'readonly',
         console: 'readonly',
         Buffer: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-        global: 'writable'
-      }
-    },
-    rules: {
-      semi: ['error', 'never'],
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
-    }
-  },
-  {
-    files: ['test/**/*.js'],
-    languageOptions: {
-      globals: {
         describe: 'readonly',
         it: 'readonly',
         before: 'readonly',
@@ -71,6 +55,18 @@ export default [
         beforeEach: 'readonly',
         afterEach: 'readonly'
       }
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin
+    },
+    rules: {
+      semi: ['error', 'never'],
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
+      ],
+      '@typescript-eslint/no-explicit-any': 'off'
     }
   }
 ]
