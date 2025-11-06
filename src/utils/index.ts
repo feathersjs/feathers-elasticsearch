@@ -1,12 +1,12 @@
 'use strict'
 
 import { removeProps } from './core'
-import { ESSearchResponse, ESHit, ESBulkResponseItem } from '../types'
+import type { ESSearchResponse, ESHit, ESBulkResponseItem } from '../types'
 
 export * from './core'
 export * from './parse-query'
 export * from './params'
-export { ESSearchResponse, ESHit, ESBulkResponseItem } from '../types'
+export type { ESSearchResponse, ESHit, ESBulkResponseItem } from '../types'
 
 /**
  * Maps Elasticsearch find results to Feathers format
