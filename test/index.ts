@@ -13,7 +13,8 @@ describe('Elasticsearch Service', () => {
   const serviceName = 'people'
   const esVersion = db.getApiVersion()
 
-  before(async () => {
+  before(async function () {
+    this.timeout(10000)
     await db.resetSchema()
     app.use(
       `/${serviceName}`,
@@ -45,13 +46,13 @@ describe('Elasticsearch Service', () => {
     )
   })
 
-  after(async () => {
+  after(async function () {
+    this.timeout(10000)
     await db.deleteSchema()
   })
 
-  it('is CommonJS compatible', async () => {
-    const commonJsModule = await import('../lib/index.js')
-    expect(typeof commonJsModule.default).to.equal('function')
+  it('is ESM compatible', () => {
+    expect(typeof service).to.equal('function')
   })
 
   describe('Initialization', () => {
@@ -80,10 +81,10 @@ describe('Elasticsearch Service', () => {
 
   describe('Specific Elasticsearch tests', () => {
     before(async () => {
-      const service = app.service(serviceName)
+      const service = app.service(serviceName) as any
 
       service.options.multi = true
-      app.service('aka').options.multi = true
+      ;(app.service('aka') as any).options.multi = true
 
       await service.remove(null, { query: { $limit: 1000 } })
       await service.create([
