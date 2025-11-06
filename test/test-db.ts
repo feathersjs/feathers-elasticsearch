@@ -36,7 +36,7 @@ export function getApiVersion(): string {
 export function getClient(): Client {
   if (!client) {
     client = new Client({
-      node: process.env.ELASTICSEARCH_URL || 'http://localhost:9201',
+      node: process.env.ELASTICSEARCH_URL || 'http://localhost:9200',
     })
   }
 
