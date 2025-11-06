@@ -20,6 +20,7 @@ describe('Elasticsearch Service', () => {
       `/${serviceName}`,
       service({
         Model: db.getClient(),
+        events: ['testing'],
         id: 'id',
         esVersion,
         elasticsearch: db.getServiceConfig(serviceName),

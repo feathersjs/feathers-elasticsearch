@@ -264,6 +264,7 @@ export interface ElasticsearchServiceOptions {
   filters?: Record<string, (val: unknown) => unknown>
   operators?: string[]
   security?: SecurityConfig
+  events?: string[]
 }
 
 export interface ElasticsearchServiceParams extends AdapterParams {
