@@ -1,5 +1,6 @@
 // import { _ } from "@feathersjs/commons";
 import { AdapterBase, filterQuery } from '@feathersjs/adapter-commons'
+import { errors } from '@feathersjs/errors'
 import { Client } from '@elastic/elasticsearch'
 import {
   ElasticsearchServiceOptions,
@@ -212,6 +213,12 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
       }) as Promise<Record<string, unknown>>
     }
 
+    if (!this.allowsMulti('create', params)) {
+      return Promise.reject(
+        new errors.MethodNotAllowed('Can not create multiple entries')
+      )
+    }
+
     return methods.createBulk(this, data, params).catch((error: Error) => {
       throw errorHandler(error)
     }) as Promise<Record<string, unknown>[]>
@@ -251,6 +258,12 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
       }) as Promise<Record<string, unknown>>
     }
 
+    if (!this.allowsMulti('patch', params)) {
+      return Promise.reject(
+        new errors.MethodNotAllowed('Can not patch multiple entries')
+      )
+    }
+
     return methods.patchBulk(this, data, params).catch((error: Error) => {
       throw errorHandler(error)
     }) as Promise<Record<string, unknown>[]>
@@ -268,6 +281,12 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
       return methods.remove(this, id, params).catch((error: Error) => {
         throw errorHandler(error, id)
       })
+    }
+
+    if (!this.allowsMulti('remove', params)) {
+      return Promise.reject(
+        new errors.MethodNotAllowed('Can not remove multiple entries')
+      )
     }
 
     return methods.removeBulk(this, params).catch((error: Error) => {
