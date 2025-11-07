@@ -47,6 +47,7 @@ export function find(service: ElasticAdapterInterface, params: ElasticsearchServ
     sort: filters.$sort as string | string[] | undefined,
     routing: filters.$routing as string | undefined,
     query: esQuery ? { bool: esQuery } : undefined,
+    _source: filters.$select as string[] | boolean | undefined,
     ...(service.esParams as Record<string, unknown>)
   }
 
