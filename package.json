@@ -40,13 +40,7 @@
     "lint": "eslint --fix .",
     "mocha": "mocha --require tsx --recursive 'test/**/*.ts'",
     "coverage": "nyc npm run mocha",
-    "test": "npm run lint && npm run build && npm run coverage",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down -v",
-    "docker:logs": "docker-compose logs -f elasticsearch",
-    "docker:test": "npm run docker:up && npm run docker:wait && npm run test:integration && npm run docker:down",
-    "docker:wait": "node scripts/wait-for-elasticsearch.js",
-    "test:integration": "ES_VERSION=8.15.0 ELASTICSEARCH_URL=http://localhost:9200 npm run test"
+    "test": "npm run lint && npm run build && npm run coverage"
   },
   "directories": {
     "lib": "lib"
