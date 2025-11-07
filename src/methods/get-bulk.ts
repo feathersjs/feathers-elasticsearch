@@ -8,7 +8,8 @@ export function getBulk(
   docs: Array<Record<string, unknown>>,
   params: ElasticsearchServiceParams
 ) {
-  const { filters } = service.filterQuery(params)
+  // Get filters but don't apply pagination/limits to mget
+  const { filters } = service.filterQuery({ ...params, paginate: false })
   const bulkGetParams = Object.assign(
     {
       _source: filters.$select,

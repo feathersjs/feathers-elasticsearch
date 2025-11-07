@@ -156,9 +156,9 @@ export async function patchBulk(
   // PERFORMANCE: Validate query complexity budget
   validateQueryComplexity(params.query || {}, service.security.maxQueryComplexity)
 
-  // Step 1: Find documents to patch
+  // Step 1: Find documents to patch (without pagination)
   const findParams = prepareFindParams(service, params)
-  const results = await service._find(findParams)
+  const results = await service._find({ ...findParams, paginate: false })
 
   // Handle paginated results
   const found = Array.isArray(results)

@@ -40,10 +40,18 @@ export function find(service: ElasticAdapterInterface, params: ElasticsearchServ
   // Parse query with security-enforced max depth
   let esQuery = parseQuery(enhancedQuery, service.id, service.security.maxQueryDepth)
 
+  // When paginate is false and no explicit limit, use Elasticsearch's default max_result_window (10000)
+  // Without this, Elasticsearch defaults to only 10 results
+  // Note: For >10k results, users must either:
+  // 1. Set explicit query.$limit, 2. Configure higher index.max_result_window, or 3. Use scroll API
+  const limit = filters.$limit !== undefined
+    ? (filters.$limit as number)
+    : (paginate === false ? 10000 : undefined)
+
   const findParams: SearchRequest = {
     index: (filters.$index as string) ?? service.index,
     from: filters.$skip as number | undefined,
-    size: filters.$limit as number | undefined,
+    size: limit,
     sort: filters.$sort as string | string[] | undefined,
     routing: filters.$routing as string | undefined,
     query: esQuery ? { bool: esQuery } : undefined,

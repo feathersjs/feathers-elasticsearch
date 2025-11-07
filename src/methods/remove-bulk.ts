@@ -14,7 +14,8 @@ export function removeBulk(service: ElasticAdapterInterface, params: Elasticsear
     (svc: ElasticAdapterInterface, params: ElasticsearchServiceParams) => Promise<unknown>
   >
 
-  return find(service, params).then((results: unknown) => {
+  // Don't apply pagination when finding items to remove
+  return find(service, { ...params, paginate: false }).then((results: unknown) => {
     const found = Array.isArray(results)
       ? results
       : ((results as Record<string, unknown>).data as Array<Record<string, unknown>>)
