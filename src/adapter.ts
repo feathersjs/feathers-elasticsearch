@@ -53,12 +53,18 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
       throw new Error('Elasticsearch `index` needs to be provided')
     }
 
+    // Merge esParams with defaults, allowing user-provided values to override
+    const elasticsearchConfig = (options.elasticsearch && typeof options.elasticsearch === 'object' && !('client' in options.elasticsearch))
+      ? options.elasticsearch as Record<string, unknown>
+      : {}
+    const esParams = Object.assign({ refresh: false }, elasticsearchConfig, options.esParams || {})
+
     super({
       id: '_id',
       parent: '_parent',
       routing: '_routing',
       meta: '_meta',
-      esParams: Object.assign({ refresh: false }, options.esParams || options.elasticsearch),
+      esParams,
       index,
       ...options,
       filters: {
@@ -211,6 +217,16 @@ export class ElasticAdapter extends AdapterBase implements ElasticAdapterInterfa
       return methods.create(this, data, params).catch((error: Error) => {
         throw errorHandler(error, (data as Record<string, unknown>)[this.id] as string | number)
       }) as Promise<Record<string, unknown>>
+    }
+
+    // Handle empty array - return early to avoid invalid bulk request
+    if (data.length === 0) {
+      if (!this.allowsMulti('create', params)) {
+        return Promise.reject(
+          new errors.MethodNotAllowed('Can not create multiple entries')
+        )
+      }
+      return Promise.resolve([])
     }
 
     if (!this.allowsMulti('create', params)) {

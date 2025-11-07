@@ -68,17 +68,111 @@ describe('Elasticsearch Service', () => {
     })
   })
 
-  adapterTests([
-    '.id', '.options', '.events', '._get', '._find', '._create', '._update', '._patch', '._remove',
-    '.$get', '.$find', '.$create', '.$update', '.$patch', '.$remove',
-    '.get', '.get + $select', '.get + id + query', '.get + NotFound', '.find', '.remove',
-    '.remove + $select', '.remove + id + query', '.remove + multi', '.update', '.update + $select',
-    '.patch', '.patch + $select', '.patch multiple', '.create', '.create + $select', '.create multi',
-    'internal .find', 'internal .get', 'internal .create', 'internal .update', 'internal .patch', 'internal .remove',
-    '.find + equal', '.find + $sort', '.find + $limit', '.find + $skip', '.find + $select',
-    '.find + $or', '.find + $in', '.find + $lt', '.find + $gt', '.find + $ne',
-    '.find + paginate', 'params.adapter + paginate'
-  ])(app, errors, 'people', 'id')
+  describe('Adapter tests', () => {
+    before(async function () {
+      this.timeout(10000)
+      // Clean up any existing data before running adapter tests
+      const peopleService = app.service(serviceName) as any
+      const originalMulti = peopleService.options.multi
+      peopleService.options.multi = true
+      try {
+        await peopleService.remove(null, { query: { $limit: 1000 }, refresh: 'wait_for' })
+      } catch (error) {
+        // Ignore errors if no data exists
+      }
+      peopleService.options.multi = originalMulti
+      // Force index refresh to ensure all changes are visible
+      await db.getClient().indices.refresh({ index: 'test-people' })
+    })
+
+    adapterTests([
+      '.id',
+      '.options',
+      '.events',
+    '._get',
+    '._find',
+    '._create',
+    '._update',
+    '._patch',
+    '._remove',
+    '.$get',
+    '.$find',
+    '.$create',
+    '.$update',
+    '.$patch',
+    '.$remove',
+    '.get',
+    '.get + $select',
+    '.get + id + query',
+    '.get + NotFound',
+    '.get + NotFound (integer)',
+    '.get + id + query id',
+    '.find',
+    '.remove',
+    '.remove + $select',
+    '.remove + id + query',
+    '.remove + multi',
+    '.remove + NotFound',
+    '.remove + NotFound (integer)',
+    '.remove + multi no pagination',
+    '.remove + id + query id',
+    '.update',
+    '.update + $select',
+    '.update + id + query',
+    '.update + NotFound',
+    '.update + NotFound (integer)',
+    '.update + query + NotFound',
+    '.update + id + query id',
+    '.patch',
+    '.patch + $select',
+    '.patch multiple',
+    '.patch + id + query',
+    '.patch multiple no pagination',
+    '.patch multi query same',
+    '.patch multi query changed',
+    '.patch + NotFound',
+    '.patch + NotFound (integer)',
+    '.patch + query + NotFound',
+    '.patch + id + query id',
+    '.create',
+    '.create + $select',
+    '.create multi',
+    '.create ignores query',
+    'internal .find',
+    'internal .get',
+    'internal .create',
+    'internal .update',
+    'internal .patch',
+    'internal .remove',
+    '.find + equal',
+    '.find + equal multiple',
+    '.find + $sort',
+    '.find + $sort + string',
+    '.find + $limit',
+    '.find + $limit 0',
+    '.find + $skip',
+    '.find + $select',
+    '.find + $or',
+    '.find + $in',
+    '.find + $nin',
+    '.find + $lt',
+    '.find + $lte',
+    '.find + $gt',
+    '.find + $gte',
+    '.find + $gt + $lt + $sort',
+    '.find + $ne',
+    '.find + $or nested + $sort',
+    '.find + $and',
+    '.find + $and + $or',
+    'params.adapter + multi',
+    '.find + paginate',
+    '.find + paginate + query',
+    '.find + paginate + $limit + $skip',
+    '.find + paginate + $limit 0',
+    '.find + paginate + params',
+    'params.adapter + paginate'
+    ])(app, errors, 'people', 'id')
+  })
 
   describe('Specific Elasticsearch tests', () => {
     before(async () => {

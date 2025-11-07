@@ -19,6 +19,7 @@ export function getServiceConfig(serviceName: string): any {
     },
   }
 
+  // Use refresh: true to make changes immediately visible
   return Object.assign({ refresh: true }, getCompatProp(configs, getApiVersion()))
 }
 
