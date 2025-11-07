@@ -44,9 +44,12 @@ export function find(service: ElasticAdapterInterface, params: ElasticsearchServ
   // Without this, Elasticsearch defaults to only 10 results
   // Note: For >10k results, users must either:
   // 1. Set explicit query.$limit, 2. Configure higher index.max_result_window, or 3. Use scroll API
+  // Important: from + size must not exceed max_result_window (10000)
+  const skip = (filters.$skip as number) || 0
+  const maxWindow = 10000
   const limit = filters.$limit !== undefined
     ? (filters.$limit as number)
-    : (paginate === false ? 10000 : undefined)
+    : (paginate === false ? Math.max(0, maxWindow - skip) : undefined)
 
   const findParams: SearchRequest = {
     index: (filters.$index as string) ?? service.index,

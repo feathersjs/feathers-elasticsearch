@@ -45,20 +45,6 @@ describe('Elasticsearch Service', () => {
         },
       })
     )
-
-    // Add global hook to delay after write operations for Elasticsearch consistency
-    app.hooks({
-      after: {
-        all: async (context) => {
-          if (['create', 'update', 'patch', 'remove'].includes(context.method)) {
-            await new Promise<void>((resolve) => {
-              setTimeout(resolve, 20)
-            })
-          }
-          return context
-        }
-      }
-    })
   })
 
   after(async function () {
@@ -91,7 +77,7 @@ describe('Elasticsearch Service', () => {
       peopleService.options.multi = true
       try {
         await peopleService.remove(null, { query: { $limit: 1000 }, refresh: 'wait_for' })
-      } catch (_error) {
+      } catch {
         // Ignore errors if no data exists
       }
       peopleService.options.multi = originalMulti
@@ -100,93 +86,93 @@ describe('Elasticsearch Service', () => {
     })
 
     adapterTests([
-      // '.id',
-      // '.options',
-      // '.events',
-      // '._get',
-      // '._find',
-      // '._create',
-      // '._update',
-      // '._patch',
-      // '._remove',
-      // '.$get',
-      // '.$find',
-      // '.$create',
-      // '.$update',
-      // '.$patch',
-      // '.$remove',
-      // '.get',
-      // '.get + $select',
-      // '.get + id + query',
-      // '.get + NotFound',
-      // '.get + NotFound (integer)',
-      // '.get + id + query id',
-      // '.find',
-      // '.remove',
-      // '.remove + $select',
-      // '.remove + id + query',
-      // '.remove + multi',
-      // '.remove + NotFound',
-      // '.remove + NotFound (integer)',
-      // '.remove + id + query id',
-      // '.update',
-      // '.update + $select',
-      // '.update + id + query',
-      // '.update + NotFound',
-      // '.update + NotFound (integer)',
-      // '.update + query + NotFound',
-      // '.update + id + query id',
-      // '.patch',
-      // '.patch + $select',
-      // '.patch + id + query',
-      // '.patch multi query changed',
-      // '.patch + NotFound',
-      // '.patch + NotFound (integer)',
-      // '.patch + query + NotFound',
-      // '.patch + id + query id',
-      // '.create',
-      // '.create + $select',
-      // 'internal .find',
-      // 'internal .get',
-      // 'internal .create',
-      // 'internal .update',
-      // 'internal .patch',
-      // 'internal .remove',
-      // '.find + equal',
-      // '.find + equal multiple',
-      // '.find + $limit',
-      // '.find + $limit 0',
-      // '.find + $select',
-      // '.find + $or',
-      // '.find + $in',
-      // '.find + $gt + $lt + $sort',
-      // '.find + $or nested + $sort',
-      // '.find + $and',
-      // '.find + $and + $or',
-      // 'params.adapter + multi',
-      // '.find + paginate + query',
-      // 'params.adapter + paginate',
+      '.id',
+      '.options',
+      '.events',
+      '._get',
+      '._find',
+      '._create',
+      '._update',
+      '._patch',
+      '._remove',
+      '.$get',
+      '.$find',
+      '.$create',
+      '.$update',
+      '.$patch',
+      '.$remove',
+      '.get',
+      '.get + $select',
+      '.get + id + query',
+      '.get + NotFound',
+      '.get + NotFound (integer)',
+      '.get + id + query id',
+      '.find',
+      '.remove',
+      '.remove + $select',
+      '.remove + id + query',
+      '.remove + multi',
+      '.remove + NotFound',
+      '.remove + NotFound (integer)',
+      '.remove + id + query id',
+      '.update',
+      '.update + $select',
+      '.update + id + query',
+      '.update + NotFound',
+      '.update + NotFound (integer)',
+      '.update + query + NotFound',
+      '.update + id + query id',
+      '.patch',
+      '.patch + $select',
+      '.patch + id + query',
+      '.patch multi query changed',
+      '.patch + NotFound',
+      '.patch + NotFound (integer)',
+      '.patch + query + NotFound',
+      '.patch + id + query id',
+      '.create',
+      '.create + $select',
+      'internal .find',
+      'internal .get',
+      'internal .create',
+      'internal .update',
+      'internal .patch',
+      'internal .remove',
+      '.find + equal',
+      '.find + equal multiple',
+      '.find + $limit',
+      '.find + $limit 0',
+      '.find + $select',
+      '.find + $or',
+      '.find + $in',
+      '.find + $gt + $lt + $sort',
+      '.find + $or nested + $sort',
+      '.find + $and',
+      '.find + $and + $or',
+      'params.adapter + multi',
+      '.find + paginate + query',
+      'params.adapter + paginate',
       //
       // Failing tests - moved to bottom due to Elasticsearch eventual consistency issues
       '.remove + multi no pagination',
-      // '.patch multiple',
-      // '.patch multiple no pagination',
-      // '.patch multi query same',
-      // '.create ignores query',
-      // '.create multi',
-      // '.find + $sort',
-      // '.find + $sort + string',
-      // '.find + $skip',
-      // '.find + $nin',
-      // '.find + $lt',
-      // '.find + $lte',
-      // '.find + $gt',
-      // '.find + $gte',
-      // '.find + $ne',
-      // '.find + paginate',
-      // '.find + paginate + $limit + $skip',
-      // '.find + paginate + $limit 0',
-      // '.find + paginate + params'
+      '.patch multiple',
+      '.patch multiple no pagination',
+      '.patch multi query same',
+      '.create ignores query',
+      '.create multi',
+      '.find + $sort',
+      '.find + $sort + string',
+      '.find + $skip',
+      '.find + $nin',
+      '.find + $lt',
+      '.find + $lte',
+      '.find + $gt',
+      '.find + $gte',
+      '.find + $ne',
+      '.find + paginate',
+      '.find + paginate + $limit + $skip',
+      '.find + paginate + $limit 0',
+      '.find + paginate + params'
     ])(app, errors, 'people', 'id')
   })
 
@@ -242,12 +228,12 @@ describe('Elasticsearch Service', () => {
       await app.service(serviceName).remove(null, { query: { $limit: 1000 } })
     })
 
-    // coreTests.find(app, serviceName, esVersion)
-    // coreTests.get(app, serviceName)
-    // coreTests.create(app, serviceName)
-    // coreTests.patch(app, serviceName, esVersion)
-    // coreTests.remove(app, serviceName)
-    // coreTests.update(app, serviceName)
-    // coreTests.raw(app, serviceName, esVersion)
+    coreTests.find(app, serviceName, esVersion)
+    coreTests.get(app, serviceName)
+    coreTests.create(app, serviceName)
+    coreTests.patch(app, serviceName, esVersion)
+    coreTests.remove(app, serviceName)
+    coreTests.update(app, serviceName)
+    coreTests.raw(app, serviceName, esVersion)
   })
 })

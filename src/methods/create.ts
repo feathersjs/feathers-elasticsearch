@@ -54,9 +54,18 @@ export function create(
   const createParams = getCreateParams(service, docDescriptor, params)
   const getParams = prepareGetParams(params, 'upsert')
 
-  // If we have routing (parent document), pass it in the query for the get operation
+  // Create should ignore query parameters except $select (which controls returned fields)
+  const originalSelect = getParams.query?.$select
+  delete getParams.query
+
+  // Restore $select if it was present
+  if (originalSelect !== undefined) {
+    getParams.query = { $select: originalSelect }
+  }
+
+  // If we have routing (parent document), add it to the query
   if (routing !== undefined) {
-    getParams.query = Object.assign({}, getParams.query, { [service.parent as string]: routing })
+    getParams.query = { ...getParams.query, [service.parent as string]: routing }
   }
   // Elasticsearch `create` expects _id, whereas index does not.
   // Our `create` supports both forms.
