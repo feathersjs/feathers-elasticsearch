@@ -101,7 +101,7 @@ security: {
 }
 ```
 
-See [SECURITY.md](./SECURITY.md) for complete security documentation and best practices.
+See [SECURITY.md](./docs/SECURITY.md) for complete security documentation and best practices.
 
 ---
 
@@ -204,7 +204,7 @@ If you don't provide a `security` configuration, these safe defaults are used:
 }
 ```
 
-For complete security documentation, see [SECURITY.md](./SECURITY.md).
+For complete security documentation, see [SECURITY.md](./docs/SECURITY.md).
 
 ## Performance Optimizations
 
@@ -238,7 +238,7 @@ const service = new Service({
 })
 ```
 
-For complete performance documentation, see [PERFORMANCE_FEATURES.md](./PERFORMANCE_FEATURES.md).
+For complete performance documentation, see [PERFORMANCE_FEATURES.md](./docs/PERFORMANCE_FEATURES.md).
 
 ## Complete Example
 
