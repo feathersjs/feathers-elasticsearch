@@ -497,7 +497,7 @@ If you encounter issues during migration:
    - [Performance Features](./PERFORMANCE_FEATURES.md)
 
 3. **Report issues:**
-   - GitHub Issues: https://github.com/feathersjs-ecosystem/feathers-elasticsearch/issues
+   - GitHub Issues: https://github.com/feathersjs/feathers-elasticsearch/issues
 
 ---
 

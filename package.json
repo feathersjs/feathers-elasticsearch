@@ -2,7 +2,7 @@
   "name": "feathers-elasticsearch",
   "description": "Elasticsearch adapter for FeathersJs",
   "version": "3.1.0",
-  "homepage": "https://github.com/feathersjs-ecosystem/feathers-elasticsearch",
+  "homepage": "https://github.com/feathersjs/feathers-elasticsearch",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "type": "module",
@@ -13,7 +13,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/feathersjs-ecosystem/feathers-elasticsearch.git"
+    "url": "git://github.com/feathersjs/feathers-elasticsearch.git"
   },
   "author": {
     "name": "Feathers contributors",
@@ -22,16 +22,16 @@
   },
   "contributors": [],
   "bugs": {
-    "url": "https://github.com/feathersjs-ecosystem/feathers-elasticsearch/issues"
+    "url": "https://github.com/feathersjs/feathers-elasticsearch/issues"
   },
   "engines": {
     "node": ">= 6"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsc",
     "clean": "shx rm -rf lib/",
-    "dev": "tsup --watch",
-    "compile": "tsup",
+    "dev": "tsc --watch",
+    "compile": "tsc",
     "publish": "git push origin --tags && npm run changelog && git push origin",
     "release:patch": "npm version patch && npm publish",
     "release:minor": "npm version minor && npm publish",
@@ -72,12 +72,10 @@
     "eslint-plugin-promise": "^7.2.1",
     "mocha": "^10.1.0",
     "nyc": "^17.1.0",
-    "pg": "^8.8.0",
     "prettier": "^3.6.2",
     "shx": "^0.3.4",
     "sinon": "^21.0.0",
     "sqlite3": "^5.1.2",
-    "tsup": "^8.5.0",
     "tsx": "^4.20.6",
     "typescript": "^4.8.4"
   }

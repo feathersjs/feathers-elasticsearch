@@ -317,7 +317,7 @@ If you're still experiencing issues:
 
 1. Check [Elasticsearch documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html)
 2. Review [FeathersJS adapter guide](https://feathersjs.com/api/databases/adapters.html)
-3. Open an issue on [GitHub](https://github.com/feathersjs-ecosystem/feathers-elasticsearch/issues)
+3. Open an issue on [GitHub](https://github.com/feathersjs/feathers-elasticsearch/issues)
 4. Include:
    - Node version (`node --version`)
    - Elasticsearch version (`curl http://localhost:9201/`)

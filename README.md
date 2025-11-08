@@ -1,6 +1,6 @@
 # feathers-elasticsearch
 
-[![CI](https://github.com/feathersjs-ecosystem/feathers-elasticsearch/actions/workflows/test-matrix.yml/badge.svg)](https://github.com/feathersjs-ecosystem/feathers-elasticsearch/actions/workflows/test-matrix.yml)
+[![CI](https://github.com/feathersjs/feathers-elasticsearch/actions/workflows/test-matrix.yml/badge.svg)](https://github.com/feathersjs/feathers-elasticsearch/actions/workflows/test-matrix.yml)
 [![npm version](https://img.shields.io/npm/v/feathers-elasticsearch.svg)](https://www.npmjs.com/package/feathers-elasticsearch)
 [![Download Status](https://img.shields.io/npm/dm/feathers-elasticsearch.svg?style=flat-square)](https://www.npmjs.com/package/feathers-elasticsearch)
 
@@ -240,7 +240,7 @@ We welcome contributions! Please see [Contributing](./docs/contributing.md) for 
 
 ```bash
 # Clone and install
-git clone https://github.com/feathersjs-ecosystem/feathers-elasticsearch.git
+git clone https://github.com/feathersjs/feathers-elasticsearch.git
 cd feathers-elasticsearch
 npm install
 
