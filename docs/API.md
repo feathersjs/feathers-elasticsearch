@@ -640,6 +640,6 @@ service.find({
 
 ## Support
 
-- GitHub Issues: [Report bugs](https://github.com/feathersjs-ecosystem/feathers-elasticsearch/issues)
-- Documentation: [Full documentation](https://github.com/feathersjs-ecosystem/feathers-elasticsearch)
+- GitHub Issues: [Report bugs](https://github.com/feathersjs/feathers-elasticsearch/issues)
+- Documentation: [Full documentation](https://github.com/feathersjs/feathers-elasticsearch)
 - Feathers Discord: [Community support](https://discord.gg/qa8kez8QBx)
