@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import errors from '@feathersjs/errors'
+import { errors } from '@feathersjs/errors'
 import { parseQuery } from '../../lib/utils/index.js'
 
 export default function parseQueryTests() {
