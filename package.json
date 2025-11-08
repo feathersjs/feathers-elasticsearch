@@ -43,39 +43,39 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@feathersjs/adapter-commons": "^5.0.34",
-    "@feathersjs/commons": "^5.0.34",
-    "@feathersjs/errors": "^5.0.34",
-    "@feathersjs/feathers": "^5.0.34",
-    "debug": "^4.4.1"
+    "@feathersjs/adapter-commons": "^5.0.0",
+    "@feathersjs/commons": "^5.0.0",
+    "@feathersjs/errors": "^5.0.0",
+    "@feathersjs/feathers": "^5.0.0",
+    "debug": "^4.4.3"
   },
   "peerDependencies": {
     "@elastic/elasticsearch": "^8.4.0"
   },
   "devDependencies": {
-    "@elastic/elasticsearch": "^8.19.1",
-    "@eslint/js": "^9.34.0",
-    "@feathersjs/adapter-tests": "^5.0.34",
+    "@elastic/elasticsearch": "^8.4.0",
+    "@eslint/js": "^9.39.1",
+    "@feathersjs/adapter-tests": "^5.0.35",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/chai": "^5.2.3",
-    "@types/mocha": "^10.0.0",
-    "@types/node": "^18.19.124",
-    "@typescript-eslint/eslint-plugin": "^8.42.0",
-    "@typescript-eslint/parser": "^8.42.0",
-    "chai": "^4.3.7",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.3",
+    "@typescript-eslint/parser": "^8.46.3",
+    "chai": "^6.2.0",
     "dtslint": "^4.2.1",
-    "eslint": "^9.34.0",
+    "eslint": "^9.39.1",
     "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-n": "^17.21.3",
+    "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-promise": "^7.2.1",
-    "mocha": "^10.1.0",
+    "mocha": "^11.7.5",
     "nyc": "^17.1.0",
     "prettier": "^3.6.2",
     "semantic-release": "^25.0.2",
-    "shx": "^0.3.4",
+    "shx": "^0.4.0",
     "sinon": "^21.0.0",
     "tsx": "^4.20.6",
-    "typescript": "^4.8.4"
+    "typescript": "^5.9.3"
   }
 }
