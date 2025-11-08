@@ -13,7 +13,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/feathersjs/feathers-elasticsearch.git"
+    "url": "https://github.com/feathersjs/feathers-elasticsearch.git"
   },
   "author": {
     "name": "Feathers contributors",
