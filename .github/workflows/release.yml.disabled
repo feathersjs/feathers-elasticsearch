@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22]
+        elasticsearch-version: ['8.15.0', '9.0.0']
+
+    name: Node ${{ matrix.node-version }} - ES ${{ matrix.elasticsearch-version }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Start Elasticsearch ${{ matrix.elasticsearch-version }}
+        run: |
+          docker run -d \
+            --name elasticsearch \
+            -p 9200:9200 \
+            -e "discovery.type=single-node" \
+            -e "xpack.security.enabled=false" \
+            -e "xpack.security.enrollment.enabled=false" \
+            docker.elastic.co/elasticsearch/elasticsearch:${{ matrix.elasticsearch-version }}
+
+      - name: Wait for Elasticsearch
+        run: |
+          echo "Waiting for Elasticsearch to be ready..."
+          for i in {1..60}; do
+            # Check cluster health status
+            HEALTH=$(curl -s "http://localhost:9200/_cluster/health" 2>/dev/null || echo "")
+            if [ ! -z "$HEALTH" ]; then
+              STATUS=$(echo $HEALTH | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+              echo "Attempt $i: Cluster status is '$STATUS'"
+
+              # Wait for yellow or green status (yellow is ok for single-node)
+              if [ "$STATUS" = "yellow" ] || [ "$STATUS" = "green" ]; then
+                echo "Elasticsearch is ready!"
+                # Give it a bit more time to fully stabilize
+                sleep 5
+                curl -s "http://localhost:9200/_cluster/health?pretty"
+                break
+              fi
+            else
+              echo "Attempt $i: Elasticsearch not responding yet..."
+            fi
+
+            if [ $i -eq 60 ]; then
+              echo "ERROR: Elasticsearch failed to become ready after 5 minutes"
+              docker logs elasticsearch
+              exit 1
+            fi
+
+            sleep 5
+          done
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: |
+          ES_VERSION=${{ matrix.elasticsearch-version }} \
+          ELASTICSEARCH_URL=http://localhost:9200 \
+          npm run mocha
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release

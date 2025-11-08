@@ -24,7 +24,7 @@ npm install feathers-elasticsearch @elastic/elasticsearch --save
 **Requirements:**
 - Feathers v5+
 - Elasticsearch 8.x or 9.x (5.x, 6.x, 7.x also supported)
-- Node.js 18+
+- Node.js 20+
 
 ## Quick Start
 

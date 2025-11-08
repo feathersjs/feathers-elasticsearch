@@ -25,19 +25,15 @@
     "url": "https://github.com/feathersjs/feathers-elasticsearch/issues"
   },
   "engines": {
-    "node": ">= 6"
+    "node": ">= 20"
   },
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf lib/",
     "dev": "tsc --watch",
     "compile": "tsc",
-    "publish": "git push origin --tags && npm run changelog && git push origin",
     "prepublish": "npm run compile",
-    "release:patch": "npm version patch && npm publish",
-    "release:minor": "npm version minor && npm publish",
-    "release:major": "npm version major && npm publish",
-    "changelog": "github_changelog_generator && git add CHANGELOG.md && git commit -am \"Updating changelog\"",
+    "semantic-release": "semantic-release",
     "lint": "eslint --fix .",
     "mocha": "mocha --require tsx --recursive 'test/**/*.ts'",
     "coverage": "nyc npm run mocha",
@@ -60,6 +56,8 @@
     "@elastic/elasticsearch": "^8.19.1",
     "@eslint/js": "^9.34.0",
     "@feathersjs/adapter-tests": "^5.0.34",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@types/chai": "^5.2.3",
     "@types/mocha": "^10.0.0",
     "@types/node": "^18.19.124",
@@ -74,6 +72,7 @@
     "mocha": "^10.1.0",
     "nyc": "^17.1.0",
     "prettier": "^3.6.2",
+    "semantic-release": "^24.2.9",
     "shx": "^0.3.4",
     "sinon": "^21.0.0",
     "tsx": "^4.20.6",
